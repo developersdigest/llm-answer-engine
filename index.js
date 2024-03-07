@@ -2,11 +2,13 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
+import { OpenAIEmbeddings } from '@langchain/openai';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
-import { BraveSearch } from 'langchain/tools';
+import { BraveSearch }  from "@langchain/community/tools/brave_search";
 import OpenAI from 'openai';
 import cheerio from 'cheerio';
+import dotenv from 'dotenv';
+dotenv.config();
 // 2. Initialize Express
 const app = express();
 const port = 3005;
