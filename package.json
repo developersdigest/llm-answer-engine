@@ -1,0 +1,17 @@
+{
+  "name": "openai-rag-api",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "express": "^4.18.3",
+    "langchain": "^0.1.25",
+    "openai": "^4.28.4"
+  }
+}

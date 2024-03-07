@@ -36,7 +36,8 @@ This repository contains the code and instructions needed to build a sophisticat
 3. Create a `.env` file in the root of your project and add your API keys:
     ```GROQ_API_KEY=<your_groq_api_key>
     BRAVE_SEARCH_API_KEY=<your_brave_search_api_key>
-    OPENAI_API_KEY=<your_openai_api_key>```
+    OPENAI_API_KEY=<your_openai_api_key>
+    ```
 
 ### Running the Server
 
@@ -57,7 +58,8 @@ Make a POST request to `localhost:3005` with a JSON body containing your query a
   "textChunkOverlap": 200,
   "numberOfSimilarityResults": 2,
   "numberOfPagesToScan": 4
-}```
+}
+```
 
 The engine will process your query and return a comprehensive answer along with sources and, if requested, follow-up questions.
 
