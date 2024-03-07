@@ -34,7 +34,8 @@ This repository contains the code and instructions needed to build a sophisticat
     or 
      ```bun install```
 3. Create a `.env` file in the root of your project and add your API keys:
-    ```GROQ_API_KEY=<your_groq_api_key>
+    ```
+    GROQ_API_KEY=<your_groq_api_key>
     BRAVE_SEARCH_API_KEY=<your_brave_search_api_key>
     OPENAI_API_KEY=<your_openai_api_key>
     ```
@@ -49,7 +50,8 @@ The server will be listening on port 3005.
 
 Make a POST request to `localhost:3005` with a JSON body containing your query and the desired parameters:
 
-```{
+```
+{
   "message": "Your question here",
   "returnSources": true,
   "returnFollowUpQuestions": true,
