@@ -58,7 +58,7 @@ Make a POST request to `localhost:3005` with a JSON body containing your query a
 
 ```
 {
-  "message": "Your question here",
+  "message": "Tell me the Anthropic's Claude 3",
   "returnSources": true,
   "returnFollowUpQuestions": true,
   "embedSourcesInLLMResponse": false,
