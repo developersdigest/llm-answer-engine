@@ -167,3 +167,7 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.\*
+
+tsconfig.json
+bun.lockb
+.vscode
