@@ -34,7 +34,7 @@ This repository contains the code and instructions needed to build a sophisticat
 ### Installation
 
 1. Clone the repository:
-    ```git clone <repository-link>```
+    ```git clone https://github.com/developersdigest/llm-answer-engine```
 2. Install the required dependencies:
     ```npm install```
     or 
