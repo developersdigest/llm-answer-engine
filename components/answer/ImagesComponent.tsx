@@ -51,7 +51,7 @@ const ImagesComponent: React.FC<ImagesComponentProps> = ({ images }) => {
         <div className="bg-white shadow-lg rounded-lg p-4 mt-4">
             <div className="flex items-center">
                 <h2 className="text-lg font-semibold flex-grow">Images</h2>
-                <img src="./serper.png" alt="serper logo" className="w-6 h-6" />
+                <img src="./brave.png" alt="brave logo" className="w-6 h-6" />
             </div>
             <div className={`flex flex-wrap mx-1 transition-all duration-500 ${showMore ? 'max-h-[500px]' : 'max-h-[200px]'} overflow-hidden`}>
                 {images.length === 0 ? (
