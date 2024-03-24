@@ -1,23 +1,57 @@
 {
-  "name": "openai-rag-api",
-  "module": "index.ts",
-  "type": "module",
-  "devDependencies": {
-    "bun-types": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
+  "name": "ai-rsc-demo",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx}\" --cache"
   },
   "dependencies": {
-    "@langchain/community": "^0.0.35",
-    "@langchain/openai": "^0.0.18",
+    "@langchain/community": "^0.0.40",
+    "@radix-ui/react-icons": "^1.3.0",
+    "@radix-ui/react-label": "^2.0.2",
+    "@radix-ui/react-separator": "^1.0.3",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-toast": "^1.1.5",
+    "@radix-ui/react-tooltip": "^1.0.7",
+    "@vercel/analytics": "^1.2.2",
+    "@vercel/kv": "^1.0.1",
+    "ai": "latest",
     "cheerio": "^1.0.0-rc.12",
-    "dotenv": "^16.4.5",
-    "express": "^4.18.3",
-    "langchain": "^0.1.25",
-    "openai": "^4.28.4"
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "d3-scale": "^4.0.2",
+    "date-fns": "^3.3.1",
+    "geist": "^1.2.2",
+    "langchain": "^0.1.28",
+    "next": "14.1.2",
+    "next-themes": "^0.2.1",
+    "openai": "^4.28.4",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-intersection-observer": "^9.8.0",
+    "react-markdown": "^9.0.1",
+    "react-textarea-autosize": "^8.5.3",
+    "tailwind-merge": "^2.2.1",
+    "tailwindcss-animate": "^1.0.7",
+    "usehooks-ts": "^2.15.1",
+    "zod": "3.22.4",
+    "zod-to-json-schema": "3.22.4"
   },
-  "scripts": {
-    "start": "node index.js"
+  "devDependencies": {
+    "@types/d3-scale": "^4.0.8",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "8.57.0",
+    "eslint-config-next": "14.1.0",
+    "postcss": "^8",
+    "prettier": "^3.2.5",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
 }
