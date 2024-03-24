@@ -1,5 +1,7 @@
 # Perplexity-Inspired LLM Answer Engine
 
+[Watch the tutorial here](https://youtu.be/kFC-OWw7G8k) for a detailed guide on setting up and running this project.
+
 ![](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZmJ0ZnhmNjkwYzczZDlqZzM1dDRka2k1MGx6dW02ZHl5dzV0aGQwMiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/mluzeYSMGoAnSXg0ft/giphy.gif)
 
 This repository contains the code and instructions needed to build a sophisticated answer engine that leverages the capabilities of [Groq](https://www.groq.com/), [Mistral AI's Mixtral](https://mistral.ai/news/mixtral-of-experts/), [Langchain.JS](https://js.langchain.com/docs/), [Brave Search](https://search.brave.com/), [Serper API](https://serper.dev/), and [OpenAI](https://openai.com/). Designed to efficiently return sources, answers, images, videos, and follow-up questions based on user queries, this project is an ideal starting point for developers interested in natural language processing and search technologies.
@@ -85,7 +87,7 @@ More info: https://ollama.com/blog/openai-compatibility
 
 In addition to the Next.JS version of the project, there is a backend only version that uses Node.js and Express. Which is located in the 'original-express-api' directory. This is a standalone version of the project that can be used as a reference for building a similar API. There is also a readme file in the 'original-express-api' directory that explains how to run the backend version.
 
-[Watch the tutorial here](https://youtu.be/43ZCeBTcsS8) for a detailed guide on setting up and running this project. The video covers every step of the process, from API key acquisition to server deployment.
+[Watch the express tutorial here](https://youtu.be/43ZCeBTcsS8) for a detailed guide on setting up and running this project. 
 
 ## Contributing
 
