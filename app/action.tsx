@@ -4,14 +4,37 @@ import { createAI, createStreamableValue } from 'ai/rsc';
 import { OpenAI } from 'openai';
 import cheerio from 'cheerio';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { OpenAIEmbeddings } from '@langchain/openai';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import { Document as DocumentInterface } from 'langchain/document';
-// 2. Initialize OpenAI client with Groq API
-const openai = new OpenAI({
-  baseURL: 'https://api.groq.com/openai/v1',
-  apiKey: process.env.GROQ_API_KEY,
-});
+import { OpenAIEmbeddings } from '@langchain/openai';
+import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
+// 1.5 Configuration file for inference model, embeddings model, and other parameters
+import { config } from './config';
+// 2. Determine which embeddings mode and which inference model to use based on the config.tsx. Currently suppport for OpenAI, Groq and partial support for Ollama embeddings and inference
+let openai: OpenAI;
+if (config.useOllamaInference) {
+  openai = new OpenAI({
+    baseURL: 'http://localhost:11434/v1',
+    apiKey: 'ollama'
+  });
+} else {
+  openai = new OpenAI({
+    baseURL: config.nonOllamaBaseURL,
+    apiKey: config.inferenceAPIKey
+  });
+}
+// 2.5 Set up the embeddings model based on the config.tsx
+let embeddings: OllamaEmbeddings | OpenAIEmbeddings;
+if (config.useOllamaEmbeddings) {
+  embeddings = new OllamaEmbeddings({
+    model: config.embeddingsModel,
+    baseUrl: "http://localhost:11434"
+  });
+} else {
+  embeddings = new OpenAIEmbeddings({
+    modelName: config.embeddingsModel
+  });
+}
 // 3. Define interfaces for search results and content results
 interface SearchResult {
   title: string;
@@ -23,9 +46,9 @@ interface ContentResult extends SearchResult {
   html: string;
 }
 // 4. Fetch search results from Brave Search API
-async function getSources(message: string): Promise<SearchResult[]> {
+async function getSources(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
   try {
-    const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(message)}&count=10`, {
+    const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(message)}&count=${numberOfPagesToScan}`, {
       headers: {
         'Accept': 'application/json',
         'Accept-Encoding': 'gzip',
@@ -87,7 +110,7 @@ async function get10BlueLinksContents(sources: SearchResult[]): Promise<ContentR
       const mainContent = extractMainContent(html);
       return { ...source, html: mainContent };
     } catch (error) {
-      console.error(`Error processing ${source.link}:`, error);
+      // console.error(`Error processing ${source.link}:`, error);
       return null;
     }
   });
@@ -103,12 +126,11 @@ async function get10BlueLinksContents(sources: SearchResult[]): Promise<ContentR
 async function processAndVectorizeContent(
   contents: ContentResult[],
   query: string,
-  textChunkSize = 1000,
-  textChunkOverlap = 400,
-  numberOfSimilarityResults = 4
+  textChunkSize = config.textChunkSize,
+  textChunkOverlap = config.textChunkOverlap,
+  numberOfSimilarityResults = config.numberOfSimilarityResults,
 ): Promise<DocumentInterface[]> {
   try {
-    const embeddings = new OpenAIEmbeddings();
     for (let i = 0; i < contents.length; i++) {
       const content = contents[i];
       if (content.html.length > 0) {
@@ -211,7 +233,7 @@ async function getVideos(message: string): Promise<{ imageUrl: string, link: str
       })
     );
     const filteredLinks = validLinks.filter((link): link is { imageUrl: string, link: string } => link !== null);
-    return filteredLinks.slice(0,9);
+    return filteredLinks.slice(0, 9);
   } catch (error) {
     console.error('Error fetching videos:', error);
     throw error;
@@ -220,33 +242,40 @@ async function getVideos(message: string): Promise<{ imageUrl: string, link: str
 // 9. Generate follow-up questions using OpenAI API
 const relevantQuestions = async (sources: SearchResult[]): Promise<any> => {
   return await openai.chat.completions.create({
-    messages:
-      [{
-        role: "system", content: `
-        You are a Question generate who generates in JSON an array of 3 follow up questions.
-         The JSON schema should include {
-          "followUp": [
-            "Question 1",
-            "Question 2", 
-            "Question 3"
-          ]
-         }
-        `
+    messages: [
+      {
+        role: "system",
+        content: `
+          You are a Question generator who generates an array of 3 follow-up questions in JSON format.
+          The JSON schema should include:
+          {
+            "original": "The original search query or context",
+            "followUp": [
+              "Question 1",
+              "Question 2", 
+              "Question 3"
+            ]
+          }
+          `,
       },
-      { role: "user", content: ` - Here are the top results from a similarity search: ${JSON.stringify(sources)}. ` },
-      ], model: "mixtral-8x7b-32768", response_format: { "type": "json_object" }
+      {
+        role: "user",
+        content: `Generate follow-up questions based on the top results from a similarity search: ${JSON.stringify(sources)}. The original search query is: "The original search query".`,
+      },
+    ],
+    model: config.inferenceModel,
+    response_format: { type: "json_object" },
   });
-}
+};
 // 10. Main action function that orchestrates the entire process
 async function myAction(userMessage: string): Promise<any> {
   "use server";
   const streamable = createStreamableValue({});
   (async () => {
-    console.log('userMessage', userMessage);
     const [images, sources, videos] = await Promise.all([
       getImages(userMessage),
       getSources(userMessage),
-      getVideos(userMessage)
+      getVideos(userMessage),
     ]);
     streamable.update({ 'searchResults': sources });
     streamable.update({ 'images': images });
@@ -260,7 +289,7 @@ async function myAction(userMessage: string): Promise<any> {
           - Here is my query "${userMessage}", respond back with an answer that is as long as possible. If you can't find any relevant results, respond with "No relevant results found." `
         },
         { role: "user", content: ` - Here are the top results from a similarity search: ${JSON.stringify(vectorResults)}. ` },
-        ], stream: true, model: "mixtral-8x7b-32768"
+        ], stream: true, model: config.inferenceModel
     });
     for await (const chunk of chatCompletion) {
       if (chunk.choices[0].delta && chunk.choices[0].finish_reason !== "stop") {
@@ -269,8 +298,10 @@ async function myAction(userMessage: string): Promise<any> {
         streamable.update({ 'llmResponseEnd': true });
       }
     }
-    const followUp = await relevantQuestions(sources);
-    streamable.update({ 'followUp': followUp });
+    if (!config.useOllamaInference) {
+      const followUp = await relevantQuestions(sources);
+      streamable.update({ 'followUp': followUp });
+    }
     streamable.done({ status: 'done' });
   })();
   return streamable.value;
@@ -293,4 +324,4 @@ export const AI = createAI({
   },
   initialUIState,
   initialAIState,
-}); 
+});

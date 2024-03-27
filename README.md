@@ -2,7 +2,7 @@
 
 [Watch the tutorial here](https://youtu.be/kFC-OWw7G8k) for a detailed guide on setting up and running this project.
 
-![](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZmJ0ZnhmNjkwYzczZDlqZzM1dDRka2k1MGx6dW02ZHl5dzV0aGQwMiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/mluzeYSMGoAnSXg0ft/giphy.gif)
+![Example](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZmJ0ZnhmNjkwYzczZDlqZzM1dDRka2k1MGx6dW02ZHl5dzV0aGQwMiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/mluzeYSMGoAnSXg0ft/giphy.gif)
 
 This repository contains the code and instructions needed to build a sophisticated answer engine that leverages the capabilities of [Groq](https://www.groq.com/), [Mistral AI's Mixtral](https://mistral.ai/news/mixtral-of-experts/), [Langchain.JS](https://js.langchain.com/docs/), [Brave Search](https://search.brave.com/), [Serper API](https://serper.dev/), and [OpenAI](https://openai.com/). Designed to efficiently return sources, answers, images, videos, and follow-up questions based on user queries, this project is an ideal starting point for developers interested in natural language processing and search technologies.
 
@@ -17,6 +17,7 @@ This repository contains the code and instructions needed to build a sophisticat
 - **Serper API**: Used for fetching relevant video and image results based on the user's query.
 - **OpenAI Embeddings**: Used for creating vector representations of text chunks.
 - **Cheerio**: Utilized for HTML parsing, allowing the extraction of content from web pages.
+- **Ollama (Optional)**: Used for streaming inference and embeddings.
 
 ## Getting Started
 
@@ -52,7 +53,6 @@ This repository contains the code and instructions needed to build a sophisticat
     GROQ_API_KEY=your_groq_api_key
     BRAVE_SEARCH_API_KEY=your_brave_search_api_key
     SERPER_API=your_serper_api_key
-
     ```
 
 ### Running the Server
@@ -68,18 +68,38 @@ bun run dev
 
 the server will be listening on the specified port.
 
+## Editing the Configuration
 
-### Ollama Support
+The configuration file is located in the `app/config.tsx` file. You can modify the following values
 
-Since this is set up with the OpenAI SDK, you can easily swap out most parts of the code to use Ollama instead.
-To get started, 
+- useOllamaInference: false,
+- useOllamaEmbeddings: false,
+- inferenceModel: 'mixtral-8x7b-32768', // Groq: 'mixtral-8x7b-32768', 'gemma-7b-it' // OpenAI: 'gpt-3.5-turbo', 'gpt-4' // Ollama 'mistral', 'llama2' etc
+- inferenceAPIKey: process.env.GROQ_API_KEY, // Groq: process.env.GROQ_API_KEY // OpenAI: process.env.OPENAI_API_KEY // Ollama: 'ollama' is the default
+- embeddingsModel: 'text-embedding-3-small', // Ollama: 'llama2', 'nomic-embed-text' // OpenAI 'text-embedding-3-small', 'text-embedding-3-large'
+- textChunkSize: 800, // Recommended to decrease for Ollama
+- textChunkOverlap: 200, // Recommended to decrease for Ollama
+- numberOfSimilarityResults: 2, // Number of similarity results to return per page
+- numberOfPagesToScan: 10, // Recommended to decrease for Ollama
+- nonOllamaBaseURL: 'https://api.groq.com/openai/v1', //Groq: https://api.groq.com/openai/v1 // OpenAI: https://api.openai.com/v1
 
-1. Swap the endpoint from Groq to your Ollama localhost
-2. Change the model string to one you have installed. 
-3. Finally use ‘ollama’ as API key 🔑
+### Ollama Support (Partially supported)
+Currently, streaming text responses are supported for Ollama, but follow-up questions are not yet supported.
+
+Embeddings are supported, however, time-to-first-token can be quite long when using both a local embedding model as well as a local model for the streaming inference. I  recommended decreasing a number of the RAG values specified in the `app/config.tsx` file to decrease the time-to-first-token when using Ollama.
+
+To get started, make sure you have the Ollama running model on your local machine and set within the config the model you would like to use and set use OllamaInference and/or useOllamaEmbeddings to true.
+
+Note: When 'useOllamaInference' is set to true, the model will be used for both text generation, but it will skip the follow-up questions inference step when using Ollama.
 
 More info: https://ollama.com/blog/openai-compatibility
 
+### Roadmap
+
+- [In progress] Add support for dynamic and conditionally rendered UI components based on the user's query
+![Example](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZmJ0ZnhmNjkwYzczZDlqZzM1dDRka2k1MGx6dW02ZHl5dzV0aGQwMiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/mluzeYSMGoAnSXg0ft/giphy.gif)
+- [] Add a settings component to allow users to select the model, embeddings model, and other parameters from the UI
+- [] Add support for follow-up questions when using Ollama
 
 ### Backend + Node Only Express API
 
@@ -97,6 +117,8 @@ Contributions to the project are welcome. Feel free to fork the repository, make
 ## License
 
 This project is licensed under the MIT License.
+
+[![Star History Chart](https://api.star-history.com/svg?repos=developersdigest/llm-answer-engine&type=Date)](https://star-history.com/#developersdigest/llm-answer-engine&Date)
 
 I'm the developer behind Developers Digest. If you find my work helpful or enjoy what I do, consider supporting me. Here are a few ways you can do that:
 

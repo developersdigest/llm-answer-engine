@@ -56,7 +56,6 @@ interface FollowUp {
     };
   }[];
 }
-
 export default function Page() {
   // 3. Set up action that will be used to stream all the messages
   const { myAction } = useActions<typeof AI>();
