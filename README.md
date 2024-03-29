@@ -37,7 +37,7 @@ This repository contains the code and instructions needed to build a sophisticat
 
 1. Clone the repository:
     ```
-    git clone https://github.com/developersdigest/llm-answer-engine.git
+    git clone https://github.com/yourusername/perplexity-inspired-llm-answer-engine.git
     ```
 2. Install the required dependencies:
     ```
@@ -97,9 +97,14 @@ More info: https://ollama.com/blog/openai-compatibility
 ### Roadmap
 
 - [In progress] Add support for dynamic and conditionally rendered UI components based on the user's query
+
 ![Example](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExN284d3p5azAyNHpubm9mb2F0cnB6MWdtcTdnd2Nkb2d1ZnRtMG0yYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/OMpt8ZbBsjphZz6mue/giphy.gif)
+
 - [] Add a settings component to allow users to select the model, embeddings model, and other parameters from the UI
 - [] Add support for follow-up questions when using Ollama
+- [Completed] Add dark mode support based on the user's system preference
+
+![Example](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZDQxdHR0NWc4MHl6cDBsNmpiMGNyeWNwbnE4MjZlb29oZGRsODBhMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QjINYAx6le5PMY020A/giphy.gif)
 
 ### Backend + Node Only Express API
 

@@ -197,9 +197,9 @@ export default function Page() {
       <div className="pb-[80px] pt-4 md:pt-10">
         <ChatScrollAnchor trackVisibility={true} />
       </div>
-      <div className="fixed inset-x-0 bottom-0 w-full bg-gradient-to-b duration-300 ease-in-out animate-in dark:from-background/10 dark:from-10% peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px]] mb-4">
+      <div className="fixed inset-x-0 bottom-0 w-full bg-gradient-to-b duration-300 ease-in-out animate-in dark:from-gray-900/10 dark:from-10% peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px]] mb-4">
         <div className="mx-auto sm:max-w-2xl sm:px-4">
-          <div className="px-4 py-2 space-y-4 border-t shadow-lg bg-background rounded-full sm:border md:py-4">
+          <div className="px-4 py-2 space-y-4 border-t shadow-lg dark:bg-slate-800 bg-gray-100 rounded-full sm:border md:py-4">
             <form
               ref={formRef}
               onSubmit={async (e: FormEvent<HTMLFormElement>) => {
@@ -214,13 +214,13 @@ export default function Page() {
                 if (!value) return;
               }}
             >
-              <div className="relative flex flex-col w-full overflow-hidden max-h-60 grow bg-background rounded-full sm:border sm:px-2">
+              <div className="relative flex flex-col w-full overflow-hidden max-h-60 grow dark:bg-slate-800 bg-gray-100 rounded-full sm:border sm:px-2">
                 <Textarea
                   ref={inputRef}
                   tabIndex={0}
                   onKeyDown={onKeyDown}
                   placeholder="Send a message."
-                  className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
+                  className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm dark:text-white text-black"
                   autoFocus
                   spellCheck={false}
                   autoComplete="off"
