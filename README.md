@@ -37,7 +37,7 @@ This repository contains the code and instructions needed to build a sophisticat
 
 1. Clone the repository:
     ```
-    git clone https://github.com/yourusername/perplexity-inspired-llm-answer-engine.git
+    git clone https://github.com/developersdigest/llm-answer-engine.git
     ```
 2. Install the required dependencies:
     ```
