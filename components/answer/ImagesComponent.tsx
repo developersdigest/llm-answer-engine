@@ -24,12 +24,12 @@ const ImagesComponent: React.FC<ImagesComponentProps> = ({ images }) => {
             {Array.from({ length: showMore ? 9 : 3 }).map((_, index) => (
                 <div key={index} className="w-1/3 p-1">
                     <div className="w-full overflow-hidden aspect-square">
-                        <div className="w-full h-full bg-gray-200 rounded animate-pulse"></div>
+                        <div className="w-full h-full bg-gray-300 dark:bg-gray-700 rounded animate-pulse"></div>
                     </div>
                 </div>
             ))}
             <div className="flex justify-center mt-4 w-full">
-                <div className="bg-gray-200 rounded-lg animate-pulse py-5 px-15 " style={{ height: '24px', width: '85px' }}></div>
+                <div className="bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse py-5 px-15 " style={{ height: '24px', width: '85px' }}></div>
             </div>
         </>
     );
@@ -48,9 +48,9 @@ const ImagesComponent: React.FC<ImagesComponentProps> = ({ images }) => {
 
     // 9. Render the 'ImagesComponent'
     return (
-        <div className="bg-white shadow-lg rounded-lg p-4 mt-4">
+        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 mt-4">
             <div className="flex items-center">
-                <h2 className="text-lg font-semibold flex-grow">Images</h2>
+                <h2 className="text-lg font-semibold flex-grow text-black dark:text-white">Images</h2>
                 <img src="./brave.png" alt="brave logo" className="w-6 h-6" />
             </div>
             <div className={`flex flex-wrap mx-1 transition-all duration-500 ${showMore ? 'max-h-[500px]' : 'max-h-[200px]'} overflow-hidden`}>
@@ -80,7 +80,7 @@ const ImagesComponent: React.FC<ImagesComponentProps> = ({ images }) => {
                 // 12. Render a 'Show More/Show Less' button if there are more than 3 images
                 <div className="flex justify-center mt-4">
                     <button
-                        className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+                        className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-black dark:text-white font-semibold py-2 px-4 rounded shadow"
                         onClick={() => setShowMore(!showMore)}
                     >
                         {showMore ? 'Show Less' : 'Show More'}
