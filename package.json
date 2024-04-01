@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@langchain/community": "^0.0.40",
+    "@langchain/openai": "^0.0.25",
     "@radix-ui/react-icons": "^1.3.0",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-separator": "^1.0.3",
