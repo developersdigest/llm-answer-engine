@@ -14,7 +14,7 @@ import { config } from './config';
 let openai: OpenAI;
 if (config.useOllamaInference) {
   openai = new OpenAI({
-    baseURL: 'http://localhost:11434/v1',
+    baseURL: config.ollamaBaseUrl,
     apiKey: 'ollama'
   });
 } else {
