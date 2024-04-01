@@ -93,10 +93,12 @@ const SearchResultsComponent = ({ searchResults }: { searchResults: SearchResult
                     >
                         {!isExpanded ? (
                             <>
-                                {searchResults.slice(3).map((result, index) => (
-                                    <img key={index} src={result.favicon} alt="favicon" className="w-4 h-4" />
+                                {searchResults.slice(0, 3).map((result, index) => (
+                                    <>
+                                        <img key={index} src={result.favicon} alt="favicon" className="w-4 h-4" />
+                                    </>
                                 ))}
-                                <span className="text-xs font-semibold dark:text-gray-200 text-gray-700">View more</span>
+                                <span className="text-sm font-semibold dark:text-gray-200 text-gray-700">View more</span>
                             </>
                         ) : (
                             <span className="text-sm font-semibold dark:text-gray-200 text-gray-700">Show Less</span>
