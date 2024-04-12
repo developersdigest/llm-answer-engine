@@ -1,5 +1,6 @@
 // 1. Import the 'useState' hook from React
 import { useState } from 'react';
+import { IconPlus, IconClose } from '@/components/ui/icons';
 
 // 2. Define the 'Image' interface with a required 'link' property and an optional 'alt' property
 interface Image {
@@ -28,9 +29,9 @@ const ImagesComponent: React.FC<ImagesComponentProps> = ({ images }) => {
                     </div>
                 </div>
             ))}
-            <div className="flex justify-center mt-4 w-full">
+            {/* <div className="flex justify-center mt-4 w-full">
                 <div className="bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse py-5 px-15 " style={{ height: '24px', width: '85px' }}></div>
-            </div>
+            </div> */}
         </>
     );
 
@@ -51,7 +52,16 @@ const ImagesComponent: React.FC<ImagesComponentProps> = ({ images }) => {
         <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 mt-4">
             <div className="flex items-center">
                 <h2 className="text-lg font-semibold flex-grow text-black dark:text-white">Images</h2>
-                <img src="./brave.png" alt="brave logo" className="w-6 h-6" />
+                {/* <img src="./brave.png" alt="brave logo" className="w-6 h-6" /> */}
+                {images.length > 3 && (
+                    <div className="flex justify-center ml-2">
+                        <button
+                            className="text-black dark:text-white focus:outline-none"
+                            onClick={() => setShowMore(!showMore)}>
+                            {showMore ? <IconClose /> : <IconPlus />}
+                        </button>
+                    </div>
+                )}
             </div>
             <div className={`flex flex-wrap mx-1 transition-all duration-500 ${showMore ? 'max-h-[500px]' : 'max-h-[200px]'} overflow-hidden`}>
                 {images.length === 0 ? (
@@ -76,17 +86,7 @@ const ImagesComponent: React.FC<ImagesComponentProps> = ({ images }) => {
                     ))
                 )}
             </div>
-            {images.length > 3 && (
-                // 12. Render a 'Show More/Show Less' button if there are more than 3 images
-                <div className="flex justify-center mt-4">
-                    <button
-                        className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-black dark:text-white font-semibold py-2 px-4 rounded shadow"
-                        onClick={() => setShowMore(!showMore)}
-                    >
-                        {showMore ? 'Show Less' : 'Show More'}
-                    </button>
-                </div>
-            )}
+
             {selectedImage && (
                 // 13. Render a modal with the selected image if 'selectedImage' is not null
                 <div

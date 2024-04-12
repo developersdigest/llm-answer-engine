@@ -1,21 +1,29 @@
 'use client';
 // 1. Import Dependencies
-import { FormEvent, useEffect, useRef, useState, useCallback } from 'react';
+import { FormEvent, useEffect, useRef, useState, useCallback, use } from 'react';
 import { useActions, readStreamableValue } from 'ai/rsc';
 import { type AI } from './action';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
 import Textarea from 'react-textarea-autosize';
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
 import { Tooltip, TooltipContent, TooltipTrigger, } from '@/components/ui/tooltip';
-import { IconArrowElbow } from '@/components/ui/icons';
 import { Button } from '@/components/ui/button';
-// Custom components 
+// Main components 
 import SearchResultsComponent from '@/components/answer/SearchResultsComponent';
 import UserMessageComponent from '@/components/answer/UserMessageComponent';
+import FollowUpComponent from '@/components/answer/FollowUpComponent';
+import InitialQueries from '@/components/answer/InitialQueries';
+// Sidebar components
 import LLMResponseComponent from '@/components/answer/LLMResponseComponent';
 import ImagesComponent from '@/components/answer/ImagesComponent';
 import VideosComponent from '@/components/answer/VideosComponent';
-import FollowUpComponent from '@/components/answer/FollowUpComponent';
+// Function calling components
+import MapComponent from '@/components/answer/Map';
+import MapDetails from '@/components/answer/MapDetails';
+import ShoppingComponent from '@/components/answer/ShoppingComponent';
+import FinancialChart from '@/components/answer/FinancialChart';
+import { ArrowUp } from '@phosphor-icons/react';
+
 // 2. Set up types
 interface SearchResult {
   favicon: string;
@@ -32,6 +40,10 @@ interface Message {
   followUp: FollowUp | null;
   isStreaming: boolean;
   searchResults?: SearchResult[];
+  conditionalFunctionCallUI?: any;
+  places?: Place[];
+  shopping?: Shopping[];
+  ticker?: string | undefined;
 }
 interface StreamMessage {
   searchResults?: any;
@@ -41,6 +53,10 @@ interface StreamMessage {
   images?: any;
   videos?: any;
   followUp?: any;
+  conditionalFunctionCallUI?: any;
+  places?: Place[];
+  shopping?: Shopping[];
+  ticker?: string;
 }
 interface Image {
   link: string;
@@ -49,6 +65,17 @@ interface Video {
   link: string;
   imageUrl: string;
 }
+interface Place {
+  cid: React.Key | null | undefined;
+  latitude: number;
+  longitude: number;
+  title: string;
+  address: string;
+  rating: number;
+  category: string;
+  phoneNumber?: string;
+  website?: string;
+}
 interface FollowUp {
   choices: {
     message: {
@@ -56,6 +83,23 @@ interface FollowUp {
     };
   }[];
 }
+interface Shopping {
+  type: string;
+  title: string;
+  source: string;
+  link: string;
+  price: string;
+  shopping: any;
+  position: number;
+  delivery: string;
+  imageUrl: string;
+  rating: number;
+  ratingCount: number;
+  offers: string;
+  productId: string;
+}
+
+
 export default function Page() {
   // 3. Set up action that will be used to stream all the messages
   const { myAction } = useActions<typeof AI>();
@@ -119,6 +163,9 @@ export default function Page() {
       followUp: null,
       isStreaming: true,
       searchResults: [] as SearchResult[],
+      places: [] as Place[],
+      shopping: [] as Shopping[],
+      ticker: undefined,
     };
     setMessages(prevMessages => [...prevMessages, newMessage]);
     let lastAppendedResponse = "";
@@ -134,7 +181,7 @@ export default function Page() {
             const currentMessage = messagesCopy[messageIndex];
             if (typedMessage.llmResponse && typedMessage.llmResponse !== lastAppendedResponse) {
               currentMessage.content += typedMessage.llmResponse;
-              lastAppendedResponse = typedMessage.llmResponse; // Update last appended response
+              lastAppendedResponse = typedMessage.llmResponse;
             }
             if (typedMessage.llmResponseEnd) {
               currentMessage.isStreaming = false;
@@ -150,6 +197,20 @@ export default function Page() {
             }
             if (typedMessage.followUp) {
               currentMessage.followUp = typedMessage.followUp;
+            }
+            // Optional Function Calling + Conditional UI
+            if (typedMessage.conditionalFunctionCallUI) {
+              const functionCall = typedMessage.conditionalFunctionCallUI;
+              if (functionCall.type === 'places') {
+                currentMessage.places = functionCall.places;
+              }
+              if (functionCall.type === 'shopping') {
+                currentMessage.shopping = functionCall.shopping;
+              }
+              if (functionCall.type === 'ticker') {
+                console.log('ticker', functionCall);
+                currentMessage.ticker = functionCall.data;
+              }
             }
           }
           return messagesCopy;
@@ -170,15 +231,15 @@ export default function Page() {
           {messages.map((message, index) => (
             <div key={`message-${index}`} className="flex flex-col md:flex-row">
               <div className="w-full md:w-3/4 md:pr-2">
-                {message.searchResults && (
-                  <SearchResultsComponent key={`searchResults-${index}`} searchResults={message.searchResults} />
-                )}
                 {message.type === 'userMessage' && <UserMessageComponent message={message.userMessage} />}
-                <LLMResponseComponent
-                  llmResponse={message.content}
-                  currentLlmResponse={currentLlmResponse}
-                  index={index}
-                  key={`llm-response-${index}`}
+                {message.ticker && message.ticker.length > 0 && (
+                  <FinancialChart key={`financialChart-${index}`} ticker={message.ticker} />
+                )}
+                {message.searchResults && (<SearchResultsComponent key={`searchResults-${index}`} searchResults={message.searchResults} />)}
+                {message.places && message.places.length > 0 && (
+                  <MapComponent key={`map-${index}`} places={message.places} />
+                )}
+                <LLMResponseComponent llmResponse={message.content} currentLlmResponse={currentLlmResponse} index={index} key={`llm-response-${index}`}
                 />
                 {message.followUp && (
                   <div className="flex flex-col">
@@ -186,66 +247,71 @@ export default function Page() {
                   </div>
                 )}
               </div>
-              <div className="w-full md:w-1/4 lg:pl-2">
+              {/* Secondary content area */}
+              <div className="w-full md:w-1/4 md:pl-2">
+                {message.shopping && message.shopping.length > 0 && <ShoppingComponent key={`shopping-${index}`} shopping={message.shopping} />}
                 {message.videos && <VideosComponent key={`videos-${index}`} videos={message.videos} />}
                 {message.images && <ImagesComponent key={`images-${index}`} images={message.images} />}
+                {message.places && message.places.length > 0 && (
+                  <MapDetails key={`map-${index}`} places={message.places} />
+                )}
               </div>
             </div>
           ))}
         </div>
       )}
-      <div className="pb-[80px] pt-4 md:pt-10">
-        <ChatScrollAnchor trackVisibility={true} />
-      </div>
-      <div className="fixed inset-x-0 bottom-0 w-full bg-gradient-to-b duration-300 ease-in-out animate-in dark:from-gray-900/10 dark:from-10% peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px]] mb-4">
-        <div className="mx-auto sm:max-w-2xl sm:px-4">
-          <div className="px-4 py-2 space-y-4 border-t shadow-lg dark:bg-slate-800 bg-gray-100 rounded-full sm:border md:py-4">
-            <form
-              ref={formRef}
-              onSubmit={async (e: FormEvent<HTMLFormElement>) => {
-                e.preventDefault();
-                handleFormSubmit(e);
-                setCurrentLlmResponse('');
-                if (window.innerWidth < 600) {
-                  (e.target as HTMLFormElement)['message']?.blur();
-                }
-                const value = inputValue.trim();
-                setInputValue('');
-                if (!value) return;
-              }}
-            >
-              <div className="relative flex flex-col w-full overflow-hidden max-h-60 grow dark:bg-slate-800 bg-gray-100 rounded-full sm:border sm:px-2">
-                <Textarea
-                  ref={inputRef}
-                  tabIndex={0}
-                  onKeyDown={onKeyDown}
-                  placeholder="Send a message."
-                  className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm dark:text-white text-black"
-                  autoFocus
-                  spellCheck={false}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  name="message"
-                  rows={1}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                />
-                <div className="absolute right-0 top-4 sm:right-4">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button type="submit" size="icon" disabled={inputValue === ''}>
-                        <IconArrowElbow />
-                        <span className="sr-only">Send message</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Send message</TooltipContent>
-                  </Tooltip>
-                </div>
+      <div className={`px-2 fixed inset-x-0 bottom-0 w-full bg-gradient-to-b duration-300 ease-in-out animate-in dark:from-gray-900/10 dark:from-10% peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px]] mb-4 bring-to-front`}>
+        <div className="mx-auto max-w-xl sm:px-4 ">
+          {messages.length === 0 && (
+            <InitialQueries questions={['How is apple\'s stock doing these days?', 'Where can I get the best bagel in NYC?', 'I want to buy a mens patagonia vest']} handleFollowUpClick={handleFollowUpClick} />
+          )}
+          <form
+            ref={formRef}
+            onSubmit={async (e: FormEvent<HTMLFormElement>) => {
+              e.preventDefault();
+              handleFormSubmit(e);
+              setCurrentLlmResponse('');
+              if (window.innerWidth < 600) {
+                (e.target as HTMLFormElement)['message']?.blur();
+              }
+              const value = inputValue.trim();
+              setInputValue('');
+              if (!value) return;
+            }}
+          >
+            <div className="relative flex flex-col w-full overflow-hidden max-h-60 grow dark:bg-slate-800 bg-gray-100 rounded-md border sm:px-2">
+              <Textarea
+                ref={inputRef}
+                tabIndex={0}
+                onKeyDown={onKeyDown}
+                placeholder="Send a message."
+                className="w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm dark:text-white text-black pr-[45px]"
+                autoFocus
+                spellCheck={false}
+                autoComplete="off"
+                autoCorrect="off"
+                name="message"
+                rows={1}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+              />
+              <ChatScrollAnchor trackVisibility={true} />
+              <div className="absolute right-5 top-4">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button type="submit" size="icon" disabled={inputValue === ''}>
+                      <ArrowUp />
+                      <span className="sr-only">Send message</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Send message</TooltipContent>
+                </Tooltip>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
       </div>
+      <div className="pb-[80px] pt-4 md:pt-10"></div>
     </div>
   );
 };

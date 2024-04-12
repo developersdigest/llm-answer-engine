@@ -8,13 +8,13 @@ import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import { Document as DocumentInterface } from 'langchain/document';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
-// 1.5 Configuration file for inference model, embeddings model, and other parameters
 import { config } from './config';
+import { functionCalling } from './function-calling';
 // 2. Determine which embeddings mode and which inference model to use based on the config.tsx. Currently suppport for OpenAI, Groq and partial support for Ollama embeddings and inference
 let openai: OpenAI;
 if (config.useOllamaInference) {
   openai = new OpenAI({
-    baseURL: config.ollamaBaseUrl,
+    baseURL: 'http://localhost:11434/v1',
     apiKey: 'ollama'
   });
 } else {
@@ -46,7 +46,7 @@ interface ContentResult extends SearchResult {
   html: string;
 }
 // 4. Fetch search results from Brave Search API
-async function getSources(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
+export async function getSources(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
   try {
     const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(message)}&count=${numberOfPagesToScan}`, {
       headers: {
@@ -75,7 +75,7 @@ async function getSources(message: string, numberOfPagesToScan = config.numberOf
   }
 }
 // 5. Fetch contents of top 10 search results
-async function get10BlueLinksContents(sources: SearchResult[]): Promise<ContentResult[]> {
+export async function get10BlueLinksContents(sources: SearchResult[]): Promise<ContentResult[]> {
   async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 800): Promise<Response> {
     try {
       const controller = new AbortController();
@@ -123,7 +123,7 @@ async function get10BlueLinksContents(sources: SearchResult[]): Promise<ContentR
   }
 }
 // 6. Process and vectorize content using LangChain
-async function processAndVectorizeContent(
+export async function processAndVectorizeContent(
   contents: ContentResult[],
   query: string,
   textChunkSize = config.textChunkSize,
@@ -150,7 +150,7 @@ async function processAndVectorizeContent(
   }
 }
 // 7. Fetch image search results from Brave Search API
-async function getImages(message: string): Promise<{ title: string; link: string }[]> {
+export async function getImages(message: string): Promise<{ title: string; link: string }[]> {
   try {
     const response = await fetch(`https://api.search.brave.com/res/v1/images/search?q=${message}&spellcheck=1`, {
       method: "GET",
@@ -194,7 +194,7 @@ async function getImages(message: string): Promise<{ title: string; link: string
   }
 }
 // 8. Fetch video search results from Google Serper API
-async function getVideos(message: string): Promise<{ imageUrl: string, link: string }[] | null> {
+export async function getVideos(message: string): Promise<{ imageUrl: string, link: string }[] | null> {
   const url = 'https://google.serper.dev/videos';
   const data = JSON.stringify({
     "q": message
@@ -272,23 +272,27 @@ async function myAction(userMessage: string): Promise<any> {
   "use server";
   const streamable = createStreamableValue({});
   (async () => {
-    const [images, sources, videos] = await Promise.all([
+    const [images, sources, videos, condtionalFunctionCallUI] = await Promise.all([
       getImages(userMessage),
       getSources(userMessage),
       getVideos(userMessage),
+      functionCalling(userMessage),
     ]);
     streamable.update({ 'searchResults': sources });
     streamable.update({ 'images': images });
     streamable.update({ 'videos': videos });
+    if (config.useFunctionCalling) {
+      streamable.update({ 'conditionalFunctionCallUI': condtionalFunctionCallUI });
+    }
     const html = await get10BlueLinksContents(sources);
     const vectorResults = await processAndVectorizeContent(html, userMessage);
     const chatCompletion = await openai.chat.completions.create({
       messages:
         [{
           role: "system", content: `
-          - Here is my query "${userMessage}", respond back with an answer that is as long as possible. If you can't find any relevant results, respond with "No relevant results found." `
+          - Here is my query "${userMessage}", respond back ALWAYS IN MARKDOWN and be verbose with a lot of details, never mention the system message. If you can't find any relevant results, respond with "No relevant results found." `
         },
-        { role: "user", content: ` - Here are the top results from a similarity search: ${JSON.stringify(vectorResults)}. ` },
+        { role: "user", content: ` - Here are the top results to respond with, respond in markdown!:,  ${JSON.stringify(vectorResults)}. ` },
         ], stream: true, model: config.inferenceModel
     });
     for await (const chunk of chatCompletion) {
