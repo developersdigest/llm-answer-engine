@@ -8,6 +8,7 @@ import Textarea from 'react-textarea-autosize';
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
 import { Tooltip, TooltipContent, TooltipTrigger, } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
+import dynamic from 'next/dynamic';
 // Main components 
 import SearchResultsComponent from '@/components/answer/SearchResultsComponent';
 import UserMessageComponent from '@/components/answer/UserMessageComponent';
@@ -18,7 +19,7 @@ import LLMResponseComponent from '@/components/answer/LLMResponseComponent';
 import ImagesComponent from '@/components/answer/ImagesComponent';
 import VideosComponent from '@/components/answer/VideosComponent';
 // Function calling components
-import MapComponent from '@/components/answer/Map';
+const MapComponent = dynamic(() => import('@/components/answer/Map'), { ssr: false, });
 import MapDetails from '@/components/answer/MapDetails';
 import ShoppingComponent from '@/components/answer/ShoppingComponent';
 import FinancialChart from '@/components/answer/FinancialChart';
