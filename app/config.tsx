@@ -16,4 +16,5 @@ export const config = {
     numberOfPagesToScan: 10, // Recommended to decrease for Ollama
     nonOllamaBaseURL: 'https://api.groq.com/openai/v1', //Groq: https://api.groq.com/openai/v1 // OpenAI: https://api.openai.com/v1 
     useFunctionCalling: true, // Set to true to enable function calling and conditional streaming UI (currently in beta)
+    useRateLimiting: false, // Uses Upstash rate limiting to limit the number of requests per user
 };

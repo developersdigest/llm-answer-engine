@@ -69,15 +69,16 @@
 }
 
 /* leaflet made me do it.. */
-.bring-to-front,
-header {
-  z-index: 999999999999 !important;
+.bring-to-front {
+  z-index: 99999 !important;
 }
 
 .bring-to-front-modal {
-  z-index: 9999999999999 !important;
+  z-index: 99999999 !important;
 }
-
+.rate-limit-modal {
+  z-index: 999999999999 !important;
+}
 /* tradingview mobile */
 .my-5.tradingview-widget-container {
   height: 150px !important;

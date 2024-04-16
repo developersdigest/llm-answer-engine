@@ -10,6 +10,17 @@ import { OpenAIEmbeddings } from '@langchain/openai';
 import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
 import { config } from './config';
 import { functionCalling } from './function-calling';
+// OPTIONAL: Use Upstash rate limiting to limit the number of requests per user
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+import { headers } from 'next/headers'
+let ratelimit: Ratelimit | undefined;
+if (config.useRateLimiting) {
+  ratelimit = new Ratelimit({
+    redis: Redis.fromEnv(),
+    limiter: Ratelimit.slidingWindow(10, "10 m") // 10 requests per 10 minutes
+  });
+}
 // 2. Determine which embeddings mode and which inference model to use based on the config.tsx. Currently suppport for OpenAI, Groq and partial support for Ollama embeddings and inference
 let openai: OpenAI;
 if (config.useOllamaInference) {
@@ -272,6 +283,13 @@ async function myAction(userMessage: string): Promise<any> {
   "use server";
   const streamable = createStreamableValue({});
   (async () => {
+    if (config.useRateLimiting) {
+      const identifier = headers().get('x-forwarded-for') || headers().get('x-real-ip') || headers().get('cf-connecting-ip') || headers().get('client-ip') || "";
+      const { success } = await ratelimit.limit(identifier);
+      if (!success) {
+        return streamable.done({ 'status': 'rateLimitReached' });
+      }
+    }
     const [images, sources, videos, condtionalFunctionCallUI] = await Promise.all([
       getImages(userMessage),
       getSources(userMessage),

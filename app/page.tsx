@@ -24,6 +24,8 @@ import MapDetails from '@/components/answer/MapDetails';
 import ShoppingComponent from '@/components/answer/ShoppingComponent';
 import FinancialChart from '@/components/answer/FinancialChart';
 import { ArrowUp } from '@phosphor-icons/react';
+// OPTIONAL: Use Upstash rate limiting to limit the number of requests per user
+import RateLimit from '@/components/answer/RateLimit';
 
 // 2. Set up types
 interface SearchResult {
@@ -42,6 +44,7 @@ interface Message {
   isStreaming: boolean;
   searchResults?: SearchResult[];
   conditionalFunctionCallUI?: any;
+  status?: string;
   places?: Place[];
   shopping?: Shopping[];
   ticker?: string | undefined;
@@ -55,6 +58,7 @@ interface StreamMessage {
   videos?: any;
   followUp?: any;
   conditionalFunctionCallUI?: any;
+  status?: string;
   places?: Place[];
   shopping?: Shopping[];
   ticker?: string;
@@ -166,6 +170,7 @@ export default function Page() {
       searchResults: [] as SearchResult[],
       places: [] as Place[],
       shopping: [] as Shopping[],
+      status: '',
       ticker: undefined,
     };
     setMessages(prevMessages => [...prevMessages, newMessage]);
@@ -180,6 +185,9 @@ export default function Page() {
           const messageIndex = messagesCopy.findIndex(msg => msg.id === newMessageId);
           if (messageIndex !== -1) {
             const currentMessage = messagesCopy[messageIndex];
+            if (typedMessage.status === 'rateLimitReached') {
+              currentMessage.status = 'rateLimitReached';
+            }
             if (typedMessage.llmResponse && typedMessage.llmResponse !== lastAppendedResponse) {
               currentMessage.content += typedMessage.llmResponse;
               lastAppendedResponse = typedMessage.llmResponse;
@@ -232,6 +240,7 @@ export default function Page() {
           {messages.map((message, index) => (
             <div key={`message-${index}`} className="flex flex-col md:flex-row">
               <div className="w-full md:w-3/4 md:pr-2">
+                {message.status && message.status === 'rateLimitReached' && <RateLimit />}
                 {message.type === 'userMessage' && <UserMessageComponent message={message.userMessage} />}
                 {message.ticker && message.ticker.length > 0 && (
                   <FinancialChart key={`financialChart-${index}`} ticker={message.ticker} />
