@@ -253,7 +253,7 @@ export async function getVideos(message: string): Promise<{ imageUrl: string, li
   }
 }
 // 9. Generate follow-up questions using OpenAI API
-const relevantQuestions = async (sources: SearchResult[]): Promise<any> => {
+const relevantQuestions = async (sources: SearchResult[], userMessage: String): Promise<any> => {
   return await openai.chat.completions.create({
     messages: [
       {
@@ -273,7 +273,7 @@ const relevantQuestions = async (sources: SearchResult[]): Promise<any> => {
       },
       {
         role: "user",
-        content: `Generate follow-up questions based on the top results from a similarity search: ${JSON.stringify(sources)}. The original search query is: "The original search query".`,
+        content: `Generate follow-up questions based on the top results from a similarity search: ${JSON.stringify(sources)}. The original search query is: "${userMessage}".`,
       },
     ],
     model: config.inferenceModel,
@@ -323,7 +323,7 @@ async function myAction(userMessage: string): Promise<any> {
       }
     }
     if (!config.useOllamaInference) {
-      const followUp = await relevantQuestions(sources);
+      const followUp = await relevantQuestions(sources, userMessage);
       streamable.update({ 'followUp': followUp });
     }
     streamable.done({ status: 'done' });
