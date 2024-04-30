@@ -141,6 +141,7 @@ export async function processAndVectorizeContent(
   textChunkOverlap = config.textChunkOverlap,
   numberOfSimilarityResults = config.numberOfSimilarityResults,
 ): Promise<DocumentInterface[]> {
+  const allResults: DocumentInterface[] = [];
   try {
     for (let i = 0; i < contents.length; i++) {
       const content = contents[i];
@@ -148,13 +149,14 @@ export async function processAndVectorizeContent(
         try {
           const splitText = await new RecursiveCharacterTextSplitter({ chunkSize: textChunkSize, chunkOverlap: textChunkOverlap }).splitText(content.html);
           const vectorStore = await MemoryVectorStore.fromTexts(splitText, { title: content.title, link: content.link }, embeddings);
-          return await vectorStore.similaritySearch(query, numberOfSimilarityResults);
+          const contentResults = await vectorStore.similaritySearch(query, numberOfSimilarityResults);
+          allResults.push(...contentResults); 
         } catch (error) {
           console.error(`Error processing content for ${content.link}:`, error);
         }
       }
     }
-    return [];
+    return allResults;
   } catch (error) {
     console.error('Error processing and vectorizing content:', error);
     throw error;
