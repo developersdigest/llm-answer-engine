@@ -21,6 +21,8 @@ if (config.useRateLimiting) {
     limiter: Ratelimit.slidingWindow(10, "10 m") // 10 requests per 10 minutes
   });
 }
+// import searchProviders from './tools/searchProviders';
+import { braveSearch, googleSearch, serperSearch } from './tools/searchProviders';
 // 2. Determine which embeddings mode and which inference model to use based on the config.tsx. Currently suppport for OpenAI, Groq and partial support for Ollama embeddings and inference
 let openai: OpenAI;
 if (config.useOllamaInference) {
@@ -50,7 +52,6 @@ if (config.useOllamaEmbeddings) {
 interface SearchResult {
   title: string;
   link: string;
-  snippet: string;
   favicon: string;
 }
 interface ContentResult extends SearchResult {
@@ -76,7 +77,6 @@ export async function getSources(message: string, numberOfPagesToScan = config.n
     const final = jsonResponse.web.results.map((result: any): SearchResult => ({
       title: result.title,
       link: result.url,
-      snippet: result.description,
       favicon: result.profile.img
     }));
     return final;
@@ -150,7 +150,7 @@ export async function processAndVectorizeContent(
           const splitText = await new RecursiveCharacterTextSplitter({ chunkSize: textChunkSize, chunkOverlap: textChunkOverlap }).splitText(content.html);
           const vectorStore = await MemoryVectorStore.fromTexts(splitText, { title: content.title, link: content.link }, embeddings);
           const contentResults = await vectorStore.similaritySearch(query, numberOfSimilarityResults);
-          allResults.push(...contentResults); 
+          allResults.push(...contentResults);
         } catch (error) {
           console.error(`Error processing content for ${content.link}:`, error);
         }
@@ -162,24 +162,29 @@ export async function processAndVectorizeContent(
     throw error;
   }
 }
-// 7. Fetch image search results from Brave Search API
+// 7. Fetch image search results from Serper API
 export async function getImages(message: string): Promise<{ title: string; link: string }[]> {
+  const url = 'https://google.serper.dev/images';
+  const data = JSON.stringify({
+    "q": message
+  });
+  const requestOptions: RequestInit = {
+    method: 'POST',
+    headers: {
+      'X-API-KEY': process.env.SERPER_API as string,
+      'Content-Type': 'application/json'
+    },
+    body: data
+  };
   try {
-    const response = await fetch(`https://api.search.brave.com/res/v1/images/search?q=${message}&spellcheck=1`, {
-      method: "GET",
-      headers: {
-        "Accept": "application/json",
-        "Accept-Encoding": "gzip",
-        "X-Subscription-Token": process.env.BRAVE_SEARCH_API_KEY as string
-      }
-    });
+    const response = await fetch(url, requestOptions);
     if (!response.ok) {
       throw new Error(`Network response was not ok. Status: ${response.status}`);
     }
-    const data = await response.json();
+    const responseData = await response.json();
     const validLinks = await Promise.all(
-      data.results.map(async (result: any) => {
-        const link = result.properties.url;
+      responseData.images.map(async (image: any) => {
+        const link = image.imageUrl;
         if (typeof link === 'string') {
           try {
             const imageResponse = await fetch(link, { method: 'HEAD' });
@@ -187,7 +192,7 @@ export async function getImages(message: string): Promise<{ title: string; link:
               const contentType = imageResponse.headers.get('content-type');
               if (contentType && contentType.startsWith('image/')) {
                 return {
-                  title: result.properties.title,
+                  title: image.title,
                   link: link,
                 };
               }
@@ -202,11 +207,11 @@ export async function getImages(message: string): Promise<{ title: string; link:
     const filteredLinks = validLinks.filter((link): link is { title: string; link: string } => link !== null);
     return filteredLinks.slice(0, 9);
   } catch (error) {
-    console.error('There was a problem with your fetch operation:', error);
+    console.error('Error fetching images:', error);
     throw error;
   }
 }
-// 8. Fetch video search results from Google Serper API
+// 8. Fetch video search results from  Serper API
 export async function getVideos(message: string): Promise<{ imageUrl: string, link: string }[] | null> {
   const url = 'https://google.serper.dev/videos';
   const data = JSON.stringify({
@@ -285,16 +290,19 @@ async function myAction(userMessage: string): Promise<any> {
   "use server";
   const streamable = createStreamableValue({});
   (async () => {
-    if (config.useRateLimiting) {
+    if (config.useRateLimiting && ratelimit) {
       const identifier = headers().get('x-forwarded-for') || headers().get('x-real-ip') || headers().get('cf-connecting-ip') || headers().get('client-ip') || "";
-      const { success } = await ratelimit.limit(identifier);
+      const { success } = await ratelimit.limit(identifier)
       if (!success) {
         return streamable.done({ 'status': 'rateLimitReached' });
       }
     }
     const [images, sources, videos, condtionalFunctionCallUI] = await Promise.all([
       getImages(userMessage),
-      getSources(userMessage),
+      config.searchProvider === "brave" ? braveSearch(userMessage) :
+        config.searchProvider === "serper" ? serperSearch(userMessage) :
+          config.searchProvider === "google" ? googleSearch(userMessage) :
+            Promise.reject(new Error(`Unsupported search provider: ${config.searchProvider}`)),
       getVideos(userMessage),
       functionCalling(userMessage),
     ]);
