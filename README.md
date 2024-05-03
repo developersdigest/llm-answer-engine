@@ -20,32 +20,21 @@ This repository contains the code and instructions needed to build a sophisticat
 
 ## YouTube Tutorials
 
-<div style="display: flex; justify-content: space-between;">
-  <div style="text-align: center;">
-    <a href="https://youtu.be/kFC-OWw7G8k">
-      <img src="https://img.youtube.com/vi/43ZCeBTcsS8/0.jpg" alt="Tutorial 2" style="max-height: 150px;"><br>
-      <span style="font-size: 12px;">Build a Perplexity-Inspired Answer Engine Using Groq, Mixtral, Langchain, Brave & OpenAI in 10 Min</span>
-    </a>
-  </div>
-  <div style="text-align: center;">
+<div style="display: flex; justify-content: center; align-items: center;">
     <a href="https://youtu.be/43ZCeBTcsS8">
-      <img src="https://img.youtube.com/vi/kFC-OWw7G8k/0.jpg" alt="Tutorial 1" style="max-height: 150px;"><br>
-      <span style="font-size: 12px;">Build a Next.JS Answer Engine with Vercel AI SDK, Groq, Mistral, Langchain, OpenAI, Brave & Serper</span>
+        <img src="https://img.youtube.com/vi/43ZCeBTcsS8/0.jpg" alt="Tutorial 2" style="width: 24%; height: auto;">
     </a>
-  </div>
-  <div style="text-align: center;">
+    <a href="https://youtu.be/kFC-OWw7G8k">
+        <img src="https://img.youtube.com/vi/kFC-OWw7G8k/0.jpg" alt="Tutorial 1" style="width: 24%; height: auto;">
+    </a>
     <a href="https://youtu.be/kV2U7ttqE-g">
-      <img src="https://img.youtube.com/vi/kV2U7ttqE-g/0.jpg" alt="Tutorial 3" style="max-height: 150px;"><br>
-      <span style="font-size: 12px;">Answer Engine: Groq Function Calling - Next.js, AI SDK, Mixtral, Langchain, OpenAI, Brave & Serper</span>
+        <img src="https://img.youtube.com/vi/kV2U7ttqE-g/0.jpg" alt="Tutorial 3" style="width: 24%; height: auto;">
     </a>
-  </div>
-  <div style="text-align: center;">
     <a href="https://youtu.be/3_aNVu6EU3Y">
-      <img src="https://img.youtube.com/vi/3_aNVu6EU3Y/0.jpg" alt="Tutorial 4" style="max-height: 150px;"><br>
-      <span style="font-size: 12px;">Answer Engine: How to Set up Rate Limiting in Next.JS with Upstash Redis</span>
+        <img src="https://img.youtube.com/vi/3_aNVu6EU3Y/0.jpg" alt="Tutorial 4" style="width: 24%; height: auto;">
     </a>
-  </div>
 </div>
+
 
 ## Technologies Used
 
