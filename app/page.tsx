@@ -34,6 +34,8 @@ interface SearchResult {
   title: string;
 }
 interface Message {
+  semanticCacheKey: any;
+  cachedData: string;
   id: number;
   type: string;
   content: string;
@@ -62,6 +64,8 @@ interface StreamMessage {
   places?: Place[];
   shopping?: Shopping[];
   ticker?: string;
+  cachedData?: string;
+  semanticCacheKey?: any;
 }
 interface Image {
   link: string;
@@ -172,6 +176,8 @@ export default function Page() {
       shopping: [] as Shopping[],
       status: '',
       ticker: undefined,
+      semanticCacheKey: null,
+      cachedData: '',
     };
     setMessages(prevMessages => [...prevMessages, newMessage]);
     let lastAppendedResponse = "";
@@ -185,43 +191,49 @@ export default function Page() {
           const messageIndex = messagesCopy.findIndex(msg => msg.id === newMessageId);
           if (messageIndex !== -1) {
             const currentMessage = messagesCopy[messageIndex];
-            if (typedMessage.status === 'rateLimitReached') {
-              currentMessage.status = 'rateLimitReached';
-            }
+
+            currentMessage.status = typedMessage.status === 'rateLimitReached' ? 'rateLimitReached' : currentMessage.status;
+
             if (typedMessage.llmResponse && typedMessage.llmResponse !== lastAppendedResponse) {
               currentMessage.content += typedMessage.llmResponse;
               lastAppendedResponse = typedMessage.llmResponse;
             }
-            if (typedMessage.llmResponseEnd) {
-              currentMessage.isStreaming = false;
-            }
-            if (typedMessage.searchResults) {
-              currentMessage.searchResults = typedMessage.searchResults;
-            }
-            if (typedMessage.images) {
-              currentMessage.images = [...typedMessage.images];
-            }
-            if (typedMessage.videos) {
-              currentMessage.videos = [...typedMessage.videos];
-            }
-            if (typedMessage.followUp) {
-              currentMessage.followUp = typedMessage.followUp;
-            }
-            // Optional Function Calling + Conditional UI
+
+            currentMessage.isStreaming = typedMessage.llmResponseEnd ? false : currentMessage.isStreaming;
+            currentMessage.searchResults = typedMessage.searchResults || currentMessage.searchResults;
+            currentMessage.images = typedMessage.images ? [...typedMessage.images] : currentMessage.images;
+            currentMessage.videos = typedMessage.videos ? [...typedMessage.videos] : currentMessage.videos;
+            currentMessage.followUp = typedMessage.followUp || currentMessage.followUp;
+            currentMessage.semanticCacheKey = messagesCopy[messageIndex];
+
+
             if (typedMessage.conditionalFunctionCallUI) {
               const functionCall = typedMessage.conditionalFunctionCallUI;
-              if (functionCall.type === 'places') {
-                currentMessage.places = functionCall.places;
-              }
-              if (functionCall.type === 'shopping') {
-                currentMessage.shopping = functionCall.shopping;
-              }
-              if (functionCall.type === 'ticker') {
-                console.log('ticker', functionCall);
-                currentMessage.ticker = functionCall.data;
+              if (functionCall.type === 'places') currentMessage.places = functionCall.places;
+              if (functionCall.type === 'shopping') currentMessage.shopping = functionCall.shopping;
+              if (functionCall.type === 'ticker') currentMessage.ticker = functionCall.data;
+            }
+
+            if (typedMessage.cachedData) {
+              const data = JSON.parse(typedMessage.cachedData);
+              currentMessage.searchResults = data.searchResults;
+              currentMessage.images = data.images;
+              currentMessage.videos = data.videos;
+              currentMessage.content = data.llmResponse;
+              currentMessage.isStreaming = false;
+              currentMessage.semanticCacheKey = data.semanticCacheKey;
+              currentMessage.conditionalFunctionCallUI = data.conditionalFunctionCallUI;
+              currentMessage.followUp = data.followUp;
+
+              if (data.conditionalFunctionCallUI) {
+                const functionCall = data.conditionalFunctionCallUI;
+                if (functionCall.type === 'places') currentMessage.places = functionCall.places;
+                if (functionCall.type === 'shopping') currentMessage.shopping = functionCall.shopping;
+                if (functionCall.type === 'ticker') currentMessage.ticker = functionCall.data;
               }
             }
           }
+
           return messagesCopy;
         });
         if (typedMessage.llmResponse) {
@@ -235,6 +247,7 @@ export default function Page() {
   };
   return (
     <div>
+      {/* create a button to clear the semantic cache */}
       {messages.length > 0 && (
         <div className="flex flex-col">
           {messages.map((message, index) => (
@@ -249,7 +262,7 @@ export default function Page() {
                 {message.places && message.places.length > 0 && (
                   <MapComponent key={`map-${index}`} places={message.places} />
                 )}
-                <LLMResponseComponent llmResponse={message.content} currentLlmResponse={currentLlmResponse} index={index} key={`llm-response-${index}`}
+                <LLMResponseComponent llmResponse={message.content} currentLlmResponse={currentLlmResponse} index={index} semanticCacheKey={message.semanticCacheKey} key={`llm-response-${index}`}
                 />
                 {message.followUp && (
                   <div className="flex flex-col">
@@ -273,7 +286,7 @@ export default function Page() {
       <div className={`px-2 fixed inset-x-0 bottom-0 w-full bg-gradient-to-b duration-300 ease-in-out animate-in dark:from-gray-900/10 dark:from-10% peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px]] mb-4 bring-to-front`}>
         <div className="mx-auto max-w-xl sm:px-4 ">
           {messages.length === 0 && (
-            <InitialQueries questions={['How is apple\'s stock doing these days?', 'Where can I get the best bagel in NYC?', 'I want to buy a mens patagonia vest']} handleFollowUpClick={handleFollowUpClick} />
+            <InitialQueries questions={['How is Apple\'s stock doing these days?', 'Where can I get the best bagel in NYC?', 'I want to buy a mens patagonia vest']} handleFollowUpClick={handleFollowUpClick} />
           )}
           <form
             ref={formRef}

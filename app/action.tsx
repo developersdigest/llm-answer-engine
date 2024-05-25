@@ -21,7 +21,14 @@ if (config.useRateLimiting) {
     limiter: Ratelimit.slidingWindow(10, "10 m") // 10 requests per 10 minutes
   });
 }
-// import searchProviders from './tools/searchProviders';
+// Optional: Use Upstash semantic cache to store and retrieve data for faster response times
+import { SemanticCache } from "@upstash/semantic-cache";
+import { Index } from "@upstash/vector";
+let semanticCache: SemanticCache | undefined;
+if (config.useSemanticCache) {
+  const index = new Index();
+  semanticCache = new SemanticCache({ index, minProximity: 0.95 });
+}
 import { braveSearch, googleSearch, serperSearch } from './tools/searchProviders';
 // 2. Determine which embeddings mode and which inference model to use based on the config.tsx. Currently suppport for OpenAI, Groq and partial support for Ollama embeddings and inference
 let openai: OpenAI;
@@ -297,6 +304,13 @@ async function myAction(userMessage: string): Promise<any> {
         return streamable.done({ 'status': 'rateLimitReached' });
       }
     }
+    if (config.useSemanticCache && semanticCache) {
+      const cachedData = await semanticCache.get(userMessage);
+      if (cachedData) {
+        streamable.update({ 'cachedData': cachedData });
+        return;
+      }
+    }
     const [images, sources, videos, condtionalFunctionCallUI] = await Promise.all([
       getImages(userMessage),
       config.searchProvider === "brave" ? braveSearch(userMessage) :
@@ -323,20 +337,42 @@ async function myAction(userMessage: string): Promise<any> {
         { role: "user", content: ` - Here are the top results to respond with, respond in markdown!:,  ${JSON.stringify(vectorResults)}. ` },
         ], stream: true, model: config.inferenceModel
     });
+    let accumulatedLLMResponse = ""
     for await (const chunk of chatCompletion) {
       if (chunk.choices[0].delta && chunk.choices[0].finish_reason !== "stop") {
         streamable.update({ 'llmResponse': chunk.choices[0].delta.content });
+        accumulatedLLMResponse += chunk.choices[0].delta.content;
       } else if (chunk.choices[0].finish_reason === "stop") {
         streamable.update({ 'llmResponseEnd': true });
       }
     }
+    let followUp;
     if (!config.useOllamaInference) {
-      const followUp = await relevantQuestions(sources, userMessage);
+      followUp = await relevantQuestions(sources, userMessage);
       streamable.update({ 'followUp': followUp });
+    }
+    const dataToCache = {
+      searchResults: sources,
+      images,
+      videos,
+      conditionalFunctionCallUI: config.useFunctionCalling ? condtionalFunctionCallUI : undefined,
+      llmResponse: accumulatedLLMResponse,
+      followUp,
+      condtionalFunctionCallUI,
+      semanticCacheKey: userMessage
+    };
+    if (config.useSemanticCache && semanticCache) {
+      await semanticCache.set(userMessage, JSON.stringify(dataToCache));
     }
     streamable.done({ status: 'done' });
   })();
   return streamable.value;
+}
+async function clearSemanticCache(userMessage: string): Promise<any> {
+  "use server";
+  console.log('Clearing semantic cache for user message:', userMessage);
+  if (!config.useSemanticCache || !semanticCache) return;
+  await semanticCache.delete(userMessage);
 }
 // 11. Define initial AI and UI states
 const initialAIState: {
@@ -352,7 +388,8 @@ const initialUIState: {
 // 12. Export the AI instance
 export const AI = createAI({
   actions: {
-    myAction
+    myAction,
+    clearSemanticCache
   },
   initialUIState,
   initialAIState,

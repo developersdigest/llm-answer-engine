@@ -7,7 +7,7 @@ const styles = {
     width: "100%",
     maxHeight: "400px",
     minHeight: "400px",
-    "@media (max-width: 768px)": {
+    "@media (maxWidth: 768px)": {
       height: "150px",
       maxHeight: "150px",
       minHeight: "150px",

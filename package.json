@@ -23,6 +23,8 @@
     "@types/leaflet": "^1.9.8",
     "@upstash/ratelimit": "^1.0.3",
     "@upstash/redis": "^1.30.0",
+    "@upstash/semantic-cache": "^1.0.3",
+    "@upstash/vector": "^1.1.1",
     "@vercel/analytics": "^1.2.2",
     "ai": "latest",
     "cheerio": "^1.0.0-rc.12",
