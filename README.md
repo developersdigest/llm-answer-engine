@@ -49,6 +49,7 @@ This repository contains the code and instructions needed to build a sophisticat
 - **Cheerio**: Utilized for HTML parsing, allowing the extraction of content from web pages.
 - **Ollama (Optional)**: Used for streaming inference and embeddings.
 - **Upstash Redis Rate Limiting (Optional)**: Used for setting up rate limiting for the application.
+- **Upstash Semantic Cache (Optional)**: Used for caching data for faster response times.
 
 ## Getting Started
 
@@ -115,6 +116,7 @@ The configuration file is located in the `app/config.tsx` file. You can modify t
 - nonOllamaBaseURL: 'https://api.groq.com/openai/v1'
 - useFunctionCalling: true
 - useRateLimiting: false
+- useSemanticCache: false
 
 ### Function Calling Support (Beta)
 Currently, function calling is supported with the following capabilities:
@@ -142,7 +144,8 @@ More info: https://ollama.com/blog/openai-compatibility
 ```https://github.com/Portkey-AI/gateway```
 - [] Add a settings component to allow users to select the model, embeddings model, and other parameters from the UI
 - [] Add support for follow-up questions when using Ollama
-- [Complete - Beta] Add support for dynamic and conditionally rendered UI components based on the user's query
+- [Complete] Add support for semantic caching to improve response times
+- [Complete] Add support for dynamic and conditionally rendered UI components based on the user's query
 
 ![Example](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExN284d3p5azAyNHpubm9mb2F0cnB6MWdtcTdnd2Nkb2d1ZnRtMG0yYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/OMpt8ZbBsjphZz6mue/giphy.gif)
 
