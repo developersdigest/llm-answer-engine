@@ -140,10 +140,11 @@ More info: https://ollama.com/blog/openai-compatibility
 
 ### Roadmap
 
-- [] Add AI Gateway to support multiple models and embeddings. (OpenAI, Azure OpenAI, Anyscale, Google Gemini & Palm, Anthropic, Cohere, Together AI, Perplexity, Mistral, Nomic, AI21, Stability AI, DeepInfra, Ollama, etc)
-```https://github.com/Portkey-AI/gateway```
+- [] Add document upload + RAG for document search/retrieval
 - [] Add a settings component to allow users to select the model, embeddings model, and other parameters from the UI
 - [] Add support for follow-up questions when using Ollama
+- [Complete] Add AI Gateway to support multiple models and embeddings. (OpenAI, Azure OpenAI, Anyscale, Google Gemini & Palm, Anthropic, Cohere, Together AI, Perplexity, Mistral, Nomic, AI21, Stability AI, DeepInfra, Ollama, etc)
+```https://github.com/Portkey-AI/gateway```
 - [Complete] Add support for semantic caching to improve response times
 - [Complete] Add support for dynamic and conditionally rendered UI components based on the user's query
 
