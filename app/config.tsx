@@ -19,4 +19,5 @@ export const config = {
     useFunctionCalling: true, // Set to true to enable function calling and conditional streaming UI (currently in beta)
     useRateLimiting: false, // Uses Upstash rate limiting to limit the number of requests per user
     useSemanticCache: true, // Uses Upstash semantic cache to store and retrieve data for faster response times
-};
+    usePortkey: false, // Uses Portkey for AI Gateway in @mentions (currently in beta) see config-tools.tsx to configure + mentionTools.tsx for source code
+}

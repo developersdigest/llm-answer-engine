@@ -2,10 +2,13 @@ import { OpenAI } from 'openai';
 import { config } from '../config';
 import Portkey from 'portkey-ai'
 
-const portkey = new Portkey({
-    apiKey: process.env.PORTKEY_API_KEY,
-    virtualKey: process.env.PORTKEY_BEDROCK_VIRTUAL_KEY
-})
+let portkey: Portkey;
+if (config.usePortkey) {
+    portkey = new Portkey({
+        apiKey: process.env.PORTKEY_API_KEY,
+        virtualKey: process.env.PORTKEY_BEDROCK_VIRTUAL_KEY
+    })
+}
 let openai: OpenAI;
 if (config.useOllamaInference) {
     openai = new OpenAI({
