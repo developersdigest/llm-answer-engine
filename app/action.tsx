@@ -68,35 +68,10 @@ interface SearchResult {
 }
 interface ContentResult extends SearchResult {
   html: string;
-}
-// 4. Fetch search results from Brave Search API
-export async function getSources(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
-  try {
-    const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(message)}&count=${numberOfPagesToScan}`, {
-      headers: {
-        'Accept': 'application/json',
-        'Accept-Encoding': 'gzip',
-        "X-Subscription-Token": process.env.BRAVE_SEARCH_API_KEY as string
-      }
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const jsonResponse = await response.json();
-    if (!jsonResponse.web || !jsonResponse.web.results) {
-      throw new Error('Invalid API response format');
-    }
-    const final = jsonResponse.web.results.map((result: any): SearchResult => ({
-      title: result.title,
-      link: result.url,
-      favicon: result.profile.img
-    }));
-    return final;
-  } catch (error) {
-    console.error('Error fetching search results:', error);
-    throw error;
-  }
-}
+} 
+
+
+
 // 5. Fetch contents of top 10 search results
 export async function get10BlueLinksContents(sources: SearchResult[]): Promise<ContentResult[]> {
   async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 800): Promise<Response> {
