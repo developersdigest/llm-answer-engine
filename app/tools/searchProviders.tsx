@@ -11,7 +11,7 @@ export async function braveSearch(message: string, numberOfPagesToScan = config.
             }
         });
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${JSON.stringify(response)}`);
+            console.log('Issue with response from Brave Search API');
         }
         const jsonResponse = await response.json();
         if (!jsonResponse.web || !jsonResponse.web.results) {

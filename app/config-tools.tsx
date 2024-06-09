@@ -1,0 +1,17 @@
+export const toolConfig = {
+    useMentionQueries: true,
+    mentionTools: [
+        // Groq Models
+        { id: 'llama3-70b-8192', name: 'Groq Llama3-70b-8192', logo: 'https://asset.brandfetch.io/idxygbEPCQ/idzCyF-I44.png?updated=1668515712972', functionName: 'streamChatCompletion', },
+        { id: 'llama3-8b-8192', name: 'Groq Llama3-8b-8192', logo: 'https://asset.brandfetch.io/idxygbEPCQ/idzCyF-I44.png?updated=1668515712972', functionName: 'streamChatCompletion' },
+        { id: 'mixtral-8x7b-32768', name: 'Groq Mixtral-8x7b-32768', logo: 'https://asset.brandfetch.io/idxygbEPCQ/idzCyF-I44.png?updated=1668515712972', functionName: 'streamChatCompletion' },
+        // AI Gateway + Portkey --- ANTHROPIC
+        { id: 'anthropic.claude-3-sonnet-20240229-v1:0', name: 'Anthropic Claude 3 Sonnet', logo: 'https://asset.brandfetch.io/idmJWF3N06/idq0tv4tfX.svg?updated=1693981852273', functionName: 'portKeyAIGateway' },
+        { id: 'anthropic.claude-3-haiku-20240307-v1:0', name: 'Anthropic Claude 3 Haiku', logo: 'https://asset.brandfetch.io/idmJWF3N06/idq0tv4tfX.svg?updated=1693981852273', functionName: 'portKeyAIGateway' },
+        // AI Gateway + Portkey --- COHERE
+        { id: 'cohere.command-text-v14', name: 'Cohere Command', logo: 'https://asset.brandfetch.io/idyni_Sw9h/idsvG5y-ZU.png?updated=1710782726843', functionName: 'portKeyAIGateway' },
+        { id: 'cohere.command-light-text-v14', name: 'Cohere Command Light', logo: 'https://asset.brandfetch.io/idyni_Sw9h/idsvG5y-ZU.png?updated=1710782726843', functionName: 'portKeyAIGateway' },
+        // AI Gateway + Portkey --- Mistral Large
+        { id: 'mistral.mistral-large-2402-v1:0', name: 'Mistral Large', logo: 'https://asset.brandfetch.io/iduUavnR6m/id_83EF0Fl.jpeg?updated=1717360232737', functionName: 'portKeyAIGateway' },
+    ],
+};

@@ -14,6 +14,11 @@ import { functionCalling } from './function-calling';
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { headers } from 'next/headers'
+
+// Mention Tools
+import { mentionFunctions } from './tools/mentionTools';
+import { toolConfig } from './config-tools';
+
 let ratelimit: Ratelimit | undefined;
 if (config.useRateLimiting) {
   ratelimit = new Ratelimit({
@@ -292,8 +297,15 @@ const relevantQuestions = async (sources: SearchResult[], userMessage: String): 
     response_format: { type: "json_object" },
   });
 };
+
+async function lookupTool(mentionTool: string, userMessage: string, streamable: any) {
+  const toolInfo = toolConfig.mentionTools.find(tool => tool.id === mentionTool);
+  if (toolInfo) {
+    return await mentionFunctions[toolInfo.functionName](mentionTool, userMessage, streamable);
+  }
+}
 // 10. Main action function that orchestrates the entire process
-async function myAction(userMessage: string): Promise<any> {
+async function myAction(userMessage: string, mentionTool: string | null, logo: string | null): Promise<any> {
   "use server";
   const streamable = createStreamableValue({});
   (async () => {
@@ -304,6 +316,10 @@ async function myAction(userMessage: string): Promise<any> {
         return streamable.done({ 'status': 'rateLimitReached' });
       }
     }
+    if (mentionTool) {
+      await lookupTool(mentionTool, userMessage, streamable);
+      return
+    }
     if (config.useSemanticCache && semanticCache) {
       const cachedData = await semanticCache.get(userMessage);
       if (cachedData) {
@@ -311,6 +327,7 @@ async function myAction(userMessage: string): Promise<any> {
         return;
       }
     }
+
     const [images, sources, videos, condtionalFunctionCallUI] = await Promise.all([
       getImages(userMessage),
       config.searchProvider === "brave" ? braveSearch(userMessage) :
@@ -339,7 +356,8 @@ async function myAction(userMessage: string): Promise<any> {
     });
     let accumulatedLLMResponse = ""
     for await (const chunk of chatCompletion) {
-      if (chunk.choices[0].delta && chunk.choices[0].finish_reason !== "stop") {
+      if (chunk.choices[0].delta && chunk.choices[0].finish_reason !== "stop" && chunk.choices[0].delta.content !== null) {
+        console.log(chunk.choices[0].delta.content)
         streamable.update({ 'llmResponse': chunk.choices[0].delta.content });
         accumulatedLLMResponse += chunk.choices[0].delta.content;
       } else if (chunk.choices[0].finish_reason === "stop") {
@@ -361,7 +379,7 @@ async function myAction(userMessage: string): Promise<any> {
       condtionalFunctionCallUI,
       semanticCacheKey: userMessage
     };
-    if (config.useSemanticCache && semanticCache) {
+    if (config.useSemanticCache && semanticCache && dataToCache.llmResponse.length > 0) {
       await semanticCache.set(userMessage, JSON.stringify(dataToCache));
     }
     streamable.done({ status: 'done' });

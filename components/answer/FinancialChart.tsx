@@ -16,7 +16,6 @@ const styles = {
 };
 
 function FinancialChart({ ticker }: { ticker: string }) {
-  console.log('ticker!', ticker);
   const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

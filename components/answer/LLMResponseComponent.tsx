@@ -1,23 +1,19 @@
 import React, { useState } from 'react';
-// 0. Import the 'useActions' hook from the 'use-actions' package
 import { type AI } from '../../app/action';
 import { useActions } from 'ai/rsc';
-
-// 1. Define the 'LLMResponseComponentProps' interface with properties for 'llmResponse', 'currentLlmResponse', 'index', and 'semanticCacheKey'
-interface LLMResponseComponentProps {
-    llmResponse: string;
-    currentLlmResponse: string;
-    index: number;
-    semanticCacheKey: string;
-}
-
-// 2. Import the 'Markdown' component from 'react-markdown'
 import Markdown from 'react-markdown';
+import CopyToClipboard from 'react-copy-to-clipboard';
+import { Copy, Check, ArrowsCounterClockwise } from "@phosphor-icons/react";
+import 'react-tooltip/dist/react-tooltip.css'
+import { Tooltip } from 'react-tooltip'
 
-// Modal component to display the fade-out message
+
+
+
+
 const Modal = ({ message, onClose }: { message: string; onClose: () => void }) => {
     React.useEffect(() => {
-        const timer = setTimeout(onClose, 3000); // Close modal after 3 seconds
+        const timer = setTimeout(onClose, 3000);
         return () => clearTimeout(timer);
     }, [onClose]);
 
@@ -42,7 +38,6 @@ const Modal = ({ message, onClose }: { message: string; onClose: () => void }) =
     );
 };
 
-// 3. Define the 'StreamingComponent' functional component that renders the 'currentLlmResponse'
 const StreamingComponent = ({ currentLlmResponse }: { currentLlmResponse: string }) => {
     return (
         <>
@@ -59,13 +54,37 @@ const StreamingComponent = ({ currentLlmResponse }: { currentLlmResponse: string
     );
 };
 
-// 4. Define the 'LLMResponseComponent' functional component that takes 'llmResponse', 'currentLlmResponse', 'index', and 'semanticCacheKey' as props
-const LLMResponseComponent = ({ llmResponse, currentLlmResponse, index, semanticCacheKey }: LLMResponseComponentProps) => {
+interface LLMResponseComponentProps {
+    llmResponse: string;
+    currentLlmResponse: string;
+    index: number;
+    semanticCacheKey: string;
+    isolatedView: boolean;
+    logo?: string;
+}
+
+const SkeletonLoader = () => {
+    return (
+        <div className="dark:bg-slate-800 bg-white shadow-lg rounded-lg p-4 mt-4">
+            <div className="flex items-center">
+                <div className="h-4 bg-gray-300 rounded-full dark:bg-gray-600 w-32 mb-4 animate-pulse"></div>
+            </div>
+            <div className="flex flex-col space-y-2">
+                <div className="h-2 bg-gray-300 rounded-full dark:bg-gray-700 w-full animate-pulse delay-75"></div>
+                <div className="h-2 bg-gray-300 rounded-full dark:bg-gray-700 w-3/4 animate-pulse delay-100"></div>
+                <div className="h-2 bg-gray-300 rounded-full dark:bg-gray-700 w-2/3 animate-pulse delay-150"></div>
+            </div>
+        </div>
+    );
+};
+
+const LLMResponseComponent = ({ llmResponse, currentLlmResponse, index, semanticCacheKey, isolatedView, logo }: LLMResponseComponentProps) => {
     const { clearSemanticCache } = useActions<typeof AI>();
     const [showModal, setShowModal] = useState(false);
+    const [copied, setCopied] = useState(false);
 
-    // 5. Check if 'llmResponse' is not empty
     const hasLlmResponse = llmResponse && llmResponse.trim().length > 0;
+    const hasCurrentLlmResponse = currentLlmResponse && currentLlmResponse.trim().length > 0;
 
     const handleClearCache = () => {
         clearSemanticCache(semanticCacheKey);
@@ -73,7 +92,7 @@ const LLMResponseComponent = ({ llmResponse, currentLlmResponse, index, semantic
     };
 
     return (
-        <>
+        <div className={isolatedView ? 'flex flex-col max-w-[1200px] mx-auto' : ''}>
             {showModal && (
                 <Modal
                     message={`The query of '${semanticCacheKey}' has been cleared from cache. `}
@@ -81,27 +100,51 @@ const LLMResponseComponent = ({ llmResponse, currentLlmResponse, index, semantic
                 />
             )}
 
-            {hasLlmResponse ? (
-                <div className="dark:bg-slate-800 bg-white shadow-lg rounded-lg p-4 mt-4">
-                    {/* 6. If 'llmResponse' is not empty, render a div with the 'Markdown' component */}
-                    <div className="flex items-center">
-                        <h2 className="text-lg font-semibold flex-grow dark:text-white text-black">Response</h2>
-                    </div>
-                    <div className="dark:text-gray-300 text-gray-800 markdown-container">
-                        <Markdown>{llmResponse}</Markdown>
-                        <div className="flex items-center justify-end">
-                            <img src="./powered-by-groq.svg" alt="powered by groq" className='mt-2 h-6' />
+            {hasLlmResponse || hasCurrentLlmResponse ? (
+                <>
+                    {hasLlmResponse ? (
+                        <div className="dark:bg-slate-800 bg-white shadow-lg rounded-lg p-4 mt-4">
+                            <div className="flex items-center">
+                                <h2 className="text-lg font-semibold flex-grow dark:text-white text-black">Response</h2>
+                            </div>
+                            <div className="dark:text-gray-300 text-gray-800 markdown-container">
+                                <Markdown>{llmResponse}</Markdown>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-between">
+                                    <CopyToClipboard text={llmResponse} onCopy={() => setCopied(true)}>
+                                        <button id="not-clickable" className="text-black dark:text-white focus:outline-none mr-2">
+                                            {copied ? <Check size={20} /> : <Copy size={20} />}
+                                            <Tooltip anchorSelect="#not-clickable">
+                                                <button>Copy</button>
+                                            </Tooltip>
+                                        </button>
+                                    </CopyToClipboard>
+                                    {!isolatedView && (
+                                        <button id="#not-clickable2" className="text-black dark:text-white focus:outline-none" onClick={handleClearCache}>
+                                            <ArrowsCounterClockwise size={20} />
+                                        </button>
+                                    )}
+
+                                </div>
+                                {!isolatedView && (
+                                    <div className="flex items-center justify-end">
+                                        <img src="./powered-by-groq.svg" alt="powered by groq" className='mt-2 h-6' />
+                                    </div>
+                                )}
+                                {logo && (
+                                    <img src={logo} alt="logo" className='mt-2 h-6 ml-auto' />
+                                )}
+                            </div>
                         </div>
-                    </div>
-                    <button className="text-black dark:text-white focus:outline-none" onClick={handleClearCache}>
-                        Clear response from cache
-                    </button>
-                </div>
+                    ) : (
+                        <StreamingComponent currentLlmResponse={currentLlmResponse} />
+                    )}
+                </>
             ) : (
-                // 7. If 'llmResponse' is empty, render the 'StreamingComponent' with 'currentLlmResponse'
-                <StreamingComponent currentLlmResponse={currentLlmResponse} />
+                <SkeletonLoader />
             )}
-        </>
+        </div>
     );
 };
 
