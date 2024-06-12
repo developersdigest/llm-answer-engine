@@ -24,6 +24,7 @@ import MapDetails from '@/components/answer/MapDetails';
 import ShoppingComponent from '@/components/answer/ShoppingComponent';
 import FinancialChart from '@/components/answer/FinancialChart';
 import Spotify from '@/components/answer/Spotify';
+import ImageGenerationComponent from '@/components/answer/ImageGenerationComponent';
 import { ArrowUp } from '@phosphor-icons/react';
 // OPTIONAL: Use Upstash rate limiting to limit the number of requests per user
 import RateLimit from '@/components/answer/RateLimit';
@@ -35,6 +36,7 @@ interface SearchResult {
   title: string;
 }
 interface Message {
+  falBase64Image: any;
   logo: string | undefined;
   semanticCacheKey: any;
   cachedData: string;
@@ -73,6 +75,7 @@ interface StreamMessage {
   spotify?: string;
   cachedData?: string;
   semanticCacheKey?: any;
+  falBase64Image?: any;
 }
 interface Image {
   link: string;
@@ -118,11 +121,10 @@ interface Shopping {
 const mentionTools = toolConfig.useMentionQueries ? toolConfig.mentionTools : [];
 
 export default function Page() {
+  
   const [mentionQuery, setMentionQuery] = useState('');
   const [selectedMentionTool, setSelectedMentionTool] = useState<string | null>(null);
   const [selectedMentionToolLogo, setSelectedMentionToolLogo] = useState<string | null>(null);
-
-
   // 3. Set up action that will be used to stream all the messages
   const { myAction } = useActions<typeof AI>();
   // 4. Set up form submission handling
@@ -205,7 +207,7 @@ export default function Page() {
       semanticCacheKey: null,
       cachedData: '',
       isolatedView: !!payload.mentionTool, // Set isolatedView based on mentionTool
-
+      falBase64Image: null,
     };
     setMessages(prevMessages => [...prevMessages, newMessage]);
     let lastAppendedResponse = "";
@@ -238,6 +240,7 @@ export default function Page() {
             currentMessage.videos = typedMessage.videos ? [...typedMessage.videos] : currentMessage.videos;
             currentMessage.followUp = typedMessage.followUp || currentMessage.followUp;
             currentMessage.semanticCacheKey = messagesCopy[messageIndex];
+            currentMessage.falBase64Image = typedMessage.falBase64Image;
 
 
             if (typedMessage.conditionalFunctionCallUI) {
@@ -258,6 +261,7 @@ export default function Page() {
               currentMessage.semanticCacheKey = data.semanticCacheKey;
               currentMessage.conditionalFunctionCallUI = data.conditionalFunctionCallUI;
               currentMessage.followUp = data.followUp;
+
 
               if (data.conditionalFunctionCallUI) {
                 const functionCall = data.conditionalFunctionCallUI;
@@ -286,15 +290,21 @@ export default function Page() {
           {messages.map((message, index) => (
             <div key={`message-${index}`}>
               {message.isolatedView ? (
-                <LLMResponseComponent
-                  key={`llm-response-${index}`}
-                  llmResponse={message.content}
-                  currentLlmResponse={currentLlmResponse}
-                  index={index}
-                  semanticCacheKey={message.semanticCacheKey}
-                  isolatedView={true}
-                  logo={message.logo}
-                />
+                selectedMentionTool === 'fal-ai/stable-diffusion-v3-medium'
+                  || message.falBase64Image
+                  ? (
+                    <ImageGenerationComponent key={`image-${index}`} src={message.falBase64Image} query={message.userMessage} />
+                  ) : (
+                    <LLMResponseComponent
+                      key={`llm-response-${index}`}
+                      llmResponse={message.content}
+                      currentLlmResponse={currentLlmResponse}
+                      index={index}
+                      semanticCacheKey={message.semanticCacheKey}
+                      isolatedView={true}
+                      logo={message.logo}
+                    />
+                  )
               ) : (
                 // Render regular view
                 <div className="flex flex-col md:flex-row max-w-[1200px] mx-auto">
@@ -328,7 +338,7 @@ export default function Page() {
                     {message.places && message.places.length > 0 && (
                       <MapDetails key={`map-${index}`} places={message.places} />
                     )}
-
+                    {message.falBase64Image && <ImageGenerationComponent key={`image-${index}`} src={message.falBase64Image} />}
                   </div>
                 </div>
               )}

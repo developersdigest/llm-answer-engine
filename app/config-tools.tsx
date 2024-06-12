@@ -13,5 +13,9 @@ export const toolConfig = {
         { id: 'cohere.command-light-text-v14', name: 'Cohere Command Light', logo: 'https://asset.brandfetch.io/idyni_Sw9h/idsvG5y-ZU.png?updated=1710782726843', functionName: 'portKeyAIGateway' },
         // AI Gateway + Portkey --- Mistral Large
         { id: 'mistral.mistral-large-2402-v1:0', name: 'Mistral Large', logo: 'https://asset.brandfetch.io/iduUavnR6m/id_83EF0Fl.jpeg?updated=1717360232737', functionName: 'portKeyAIGateway' },
+        // AI Gateway + Together.AI --- QWEN
+        { id: 'Qwen/Qwen2-72B-Instruct', name: 'Qwen2 - 72B', logo: 'https://avatars.githubusercontent.com/u/141221163?s=200&v=4', functionName: 'portKeyAIGatewayTogetherAI' },
+        // FAL.AI - Stable Diffusion 3 Medium
+        { id: 'fal-ai/stable-diffusion-v3-medium', name: 'fal.ai Stable Diffusion 3 ', logo: 'https://avatars.githubusercontent.com/u/74778219?s=200&v=4', functionName: 'falAiStableDiffusion3Medium' },
     ],
 };
