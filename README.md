@@ -124,6 +124,7 @@ Currently, function calling is supported with the following capabilities:
 - Maps and Locations (Serper Locations API)
 - Shopping (Serper Shopping API)
 - TradingView Stock Data (Free Widget)
+- Spotify (Free API)
 - Any functionality that you would like to see here, please open an issue or submit a PR.
 - To enable function calling and conditional streaming UI (currently in beta), ensure useFunctionCalling is set to true in the config file.
 
@@ -143,6 +144,7 @@ More info: https://ollama.com/blog/openai-compatibility
 - [] Add document upload + RAG for document search/retrieval
 - [] Add a settings component to allow users to select the model, embeddings model, and other parameters from the UI
 - [] Add support for follow-up questions when using Ollama
+- [Complete] Add support diffusion models (Fal.AI SD3 to start), accessible via '@ mention'
 - [Complete] Add AI Gateway to support multiple models and embeddings. (OpenAI, Azure OpenAI, Anyscale, Google Gemini & Palm, Anthropic, Cohere, Together AI, Perplexity, Mistral, Nomic, AI21, Stability AI, DeepInfra, Ollama, etc)
 ```https://github.com/Portkey-AI/gateway```
 - [Complete] Add support for semantic caching to improve response times
