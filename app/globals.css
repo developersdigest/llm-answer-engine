@@ -76,9 +76,11 @@
 .bring-to-front-modal {
   z-index: 99999999 !important;
 }
+
 .rate-limit-modal {
   z-index: 999999999999 !important;
 }
+
 /* tradingview mobile */
 .my-5.tradingview-widget-container {
   height: 150px !important;
@@ -199,4 +201,13 @@
   border: none;
   border-top: 1px solid #ddd;
   margin: 1.5em 0;
+}
+
+.fixed.inset-0.z-50.bg-black\/80.data-\[state\=open\]\:animate-in.data-\[state\=closed\]\:animate-out.data-\[state\=closed\]\:fade-out-0.data-\[state\=open\]\:fade-in-0 {
+  z-index: 99999;
+}
+
+.clip-yt-img {
+  margin-top: -24px;
+  clip-path: inset(30px 0 30px 0);
 }

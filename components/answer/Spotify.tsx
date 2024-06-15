@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 
 function Spotify({ spotify }: { spotify: string }) {
-    console.log('Rendering Spotify component with spotify:', spotify);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {

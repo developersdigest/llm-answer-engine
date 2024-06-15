@@ -332,7 +332,6 @@ async function myAction(userMessage: string, mentionTool: string | null, logo: s
     let accumulatedLLMResponse = ""
     for await (const chunk of chatCompletion) {
       if (chunk.choices[0].delta && chunk.choices[0].finish_reason !== "stop" && chunk.choices[0].delta.content !== null) {
-        console.log(chunk.choices[0].delta.content)
         streamable.update({ 'llmResponse': chunk.choices[0].delta.content });
         accumulatedLLMResponse += chunk.choices[0].delta.content;
       } else if (chunk.choices[0].finish_reason === "stop") {

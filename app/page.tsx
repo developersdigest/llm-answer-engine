@@ -1,6 +1,6 @@
 'use client';
 // 1. Import Dependencies
-import { FormEvent, useEffect, useRef, useState, useCallback, use } from 'react';
+import { FormEvent, useEffect, useRef, useState, useCallback } from 'react';
 import { useActions, readStreamableValue } from 'ai/rsc';
 import { type AI } from './action';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
@@ -333,8 +333,8 @@ export default function Page() {
                   <div className="w-full md:w-1/4 md:pl-2">
 
                     {message.shopping && message.shopping.length > 0 && <ShoppingComponent key={`shopping-${index}`} shopping={message.shopping} />}
-                    {message.videos && <VideosComponent key={`videos-${index}`} videos={message.videos} />}
                     {message.images && <ImagesComponent key={`images-${index}`} images={message.images} />}
+                    {message.videos && <VideosComponent key={`videos-${index}`} videos={message.videos} />}
                     {message.places && message.places.length > 0 && (
                       <MapDetails key={`map-${index}`} places={message.places} />
                     )}

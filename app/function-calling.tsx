@@ -60,7 +60,7 @@ export async function goShopping(message: string) {
     try {
         const response = await fetch(url, requestOptions);
         if (!response.ok) {
-            throw new Error(`Network response was not ok. Status: ${response.status}`);
+            console.error(`Failed to fetch ${url}. Status: ${response.status}`);
         }
         const responseData = await response.json();
         const shoppingData = {
@@ -70,7 +70,6 @@ export async function goShopping(message: string) {
         return JSON.stringify(shoppingData);
     } catch (error) {
         console.error('Error fetching shopping data:', error);
-        throw error;
     }
 }
 export async function getTickers(ticker: string) {
