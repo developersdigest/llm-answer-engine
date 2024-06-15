@@ -25,7 +25,7 @@ import ShoppingComponent from '@/components/answer/ShoppingComponent';
 import FinancialChart from '@/components/answer/FinancialChart';
 import Spotify from '@/components/answer/Spotify';
 import ImageGenerationComponent from '@/components/answer/ImageGenerationComponent';
-import { ArrowUp } from '@phosphor-icons/react';
+import { ArrowUp, Paperclip } from '@phosphor-icons/react';
 // OPTIONAL: Use Upstash rate limiting to limit the number of requests per user
 import RateLimit from '@/components/answer/RateLimit';
 import { toolConfig } from './config-tools';
@@ -121,10 +121,11 @@ interface Shopping {
 const mentionTools = toolConfig.useMentionQueries ? toolConfig.mentionTools : [];
 
 export default function Page() {
-  
+  const [file, setFile] = useState('');
   const [mentionQuery, setMentionQuery] = useState('');
   const [selectedMentionTool, setSelectedMentionTool] = useState<string | null>(null);
   const [selectedMentionToolLogo, setSelectedMentionToolLogo] = useState<string | null>(null);
+  const [showRAG, setShowRAG] = useState(false);
   // 3. Set up action that will be used to stream all the messages
   const { myAction } = useActions<typeof AI>();
   // 4. Set up form submission handling
@@ -138,7 +139,7 @@ export default function Page() {
   // 7. Set up handler for when the user clicks on the follow up button
   const handleFollowUpClick = useCallback(async (question: string) => {
     setCurrentLlmResponse('');
-    await handleUserMessageSubmission({ message: question, mentionTool: null, logo: null });
+    await handleUserMessageSubmission({ message: question, mentionTool: null, logo: null, file: file });
   }, []);
 
   // 8. For the form submission, we need to set up a handler that will be called when the user submits the form
@@ -164,7 +165,7 @@ export default function Page() {
     };
   }, [inputRef]);
   // 9. Set up handler for when a submission is made, which will call the myAction function
-  const handleSubmit = async (payload: { message: string; mentionTool: string | null, logo: string | null }) => {
+  const handleSubmit = async (payload: { message: string; mentionTool: string | null, logo: string | null, file: string }) => {
     if (!payload.message) return;
     await handleUserMessageSubmission(payload);
   };
@@ -177,14 +178,17 @@ export default function Page() {
       message: inputValue.trim(),
       mentionTool: selectedMentionTool,
       logo: selectedMentionToolLogo,
+      file: file,
     };
 
     await handleSubmit(payload);
     setSelectedMentionTool(null);
     setSelectedMentionToolLogo(null);
+    setFile('');
+    setShowRAG(false);
   };
   const handleUserMessageSubmission = async (payload: {
-    logo: any; message: string; mentionTool: string | null
+    logo: any; message: string; mentionTool: string | null, file: string
   }): Promise<void> => {
     const newMessageId = Date.now();
     const newMessage = {
@@ -192,6 +196,7 @@ export default function Page() {
       type: 'userMessage',
       userMessage: payload.message,
       mentionTool: payload.mentionTool,
+      file: payload.file,
       logo: payload.logo,
       content: '',
       images: [],
@@ -212,7 +217,7 @@ export default function Page() {
     setMessages(prevMessages => [...prevMessages, newMessage]);
     let lastAppendedResponse = "";
     try {
-      const streamableValue = await myAction(payload.message, payload.mentionTool, payload.logo);
+      const streamableValue = await myAction(payload.message, payload.mentionTool, payload.logo, payload.file);
 
       let llmResponseString = "";
       for await (const message of readStreamableValue(streamableValue)) {
@@ -282,6 +287,20 @@ export default function Page() {
     } catch (error) {
       console.error("Error streaming data for user message:", error);
     }
+  };
+  const handleFileUpload = (file: File) => {
+    console.log('file', file);
+    // file reader to read the file and set the file state
+    const fileReader = new FileReader();
+    fileReader.onload = (e) => {
+      const base64File = e.target?.result;
+      if (base64File) {
+        console.log('base64File', base64File);
+        setFile(String(base64File));
+      }
+    };
+    fileReader.readAsDataURL(file)
+
   };
   return (
     <div>
@@ -367,6 +386,7 @@ export default function Page() {
                       onClick={() => {
                         setSelectedMentionTool(tool.id);
                         setSelectedMentionToolLogo(tool.logo);
+                        tool.enableRAG && setShowRAG(true);
                         setMentionQuery("");
                         setInputValue(" "); // Update the input value with a single blank space
                       }}
@@ -413,6 +433,25 @@ export default function Page() {
                   src={selectedMentionToolLogo}
                   className="absolute left-2 top-4 w-8 h-8"
                 />
+              )}
+              {showRAG && (
+                <>
+                  <label htmlFor="fileInput" className="absolute left-12 top-5 w-8 h-8">
+                    <Paperclip size={28} />
+                  </label>
+                  <input
+                    id="fileInput"
+                    type="file"
+                    accept=".doc,.docx,.pdf, .txt, .js, .tsx"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleFileUpload(file);
+                      }
+                    }}
+                  />
+                </>
               )}
               <Textarea
                 ref={inputRef}

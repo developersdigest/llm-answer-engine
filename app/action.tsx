@@ -68,7 +68,7 @@ interface SearchResult {
 }
 interface ContentResult extends SearchResult {
   html: string;
-} 
+}
 
 
 
@@ -280,9 +280,10 @@ async function lookupTool(mentionTool: string, userMessage: string, streamable: 
   }
 }
 // 10. Main action function that orchestrates the entire process
-async function myAction(userMessage: string, mentionTool: string | null, logo: string | null): Promise<any> {
+async function myAction(userMessage: string, mentionTool: string | null, logo: string | null, file: string): Promise<any> {
   "use server";
   const streamable = createStreamableValue({});
+
   (async () => {
     if (config.useRateLimiting && ratelimit) {
       const identifier = headers().get('x-forwarded-for') || headers().get('x-real-ip') || headers().get('cf-connecting-ip') || headers().get('client-ip') || "";
@@ -292,8 +293,19 @@ async function myAction(userMessage: string, mentionTool: string | null, logo: s
       }
     }
     if (mentionTool) {
-      await lookupTool(mentionTool, userMessage, streamable);
-      return
+      // add decoded file to userMessage 
+      //  convert file base64 to string
+      if (file) {
+        // remove the base64 prefix
+
+        const decodedFile = Buffer.from(file, 'base64').toString('utf-8').replace(/^data:image\/\w+;base64,/, '');
+        console.log(decodedFile);
+        await lookupTool(mentionTool, userMessage + "File Content: " + decodedFile, streamable);
+      } else {
+        await lookupTool(mentionTool, userMessage, streamable);
+        return
+      }
+
     }
     if (config.useSemanticCache && semanticCache) {
       const cachedData = await semanticCache.get(userMessage);
