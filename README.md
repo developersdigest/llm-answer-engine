@@ -117,6 +117,7 @@ The configuration file is located in the `app/config.tsx` file. You can modify t
 - useFunctionCalling: true
 - useRateLimiting: false
 - useSemanticCache: false
+- usePortkey: false
 
 ### Function Calling Support (Beta)
 Currently, function calling is supported with the following capabilities:
@@ -153,8 +154,6 @@ More info: https://ollama.com/blog/openai-compatibility
 ![Example](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExN284d3p5azAyNHpubm9mb2F0cnB6MWdtcTdnd2Nkb2d1ZnRtMG0yYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/OMpt8ZbBsjphZz6mue/giphy.gif)
 
 - [Completed] Add dark mode support based on the user's system preference
-
-![Example](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZDQxdHR0NWc4MHl6cDBsNmpiMGNyeWNwbnE4MjZlb29oZGRsODBhMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QjINYAx6le5PMY020A/giphy.gif)
 
 ### Backend + Node Only Express API
 

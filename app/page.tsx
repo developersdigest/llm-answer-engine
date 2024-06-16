@@ -28,7 +28,7 @@ import ImageGenerationComponent from '@/components/answer/ImageGenerationCompone
 import { ArrowUp, Paperclip } from '@phosphor-icons/react';
 // OPTIONAL: Use Upstash rate limiting to limit the number of requests per user
 import RateLimit from '@/components/answer/RateLimit';
-import { toolConfig } from './config-tools';
+import { mentionToolConfig } from './tools/mentionToolConfig';
 // 2. Set up types
 interface SearchResult {
   favicon: string;
@@ -118,7 +118,7 @@ interface Shopping {
   productId: string;
 }
 
-const mentionTools = toolConfig.useMentionQueries ? toolConfig.mentionTools : [];
+const mentionTools = mentionToolConfig.useMentionQueries ? mentionToolConfig.mentionTools : [];
 
 export default function Page() {
   const [file, setFile] = useState('');
@@ -180,12 +180,12 @@ export default function Page() {
       logo: selectedMentionToolLogo,
       file: file,
     };
-
     await handleSubmit(payload);
+    setShowRAG(false);
     setSelectedMentionTool(null);
     setSelectedMentionToolLogo(null);
     setFile('');
-    setShowRAG(false);
+
   };
   const handleUserMessageSubmission = async (payload: {
     logo: any; message: string; mentionTool: string | null, file: string
@@ -436,7 +436,11 @@ export default function Page() {
               )}
               {showRAG && (
                 <>
-                  <label htmlFor="fileInput" className="absolute left-12 top-5 w-8 h-8">
+                  {/* increase size on hover */}
+                  <label
+                    htmlFor="fileInput"
+                    className="absolute left-12 top-5 w-6 h-6 -rotate-45 transition-transform duration-300 hover:rotate-0 "
+                  >
                     <Paperclip size={28} />
                   </label>
                   <input
@@ -459,7 +463,10 @@ export default function Page() {
                 onKeyDown={onKeyDown}
                 placeholder="Send a message."
                 className={`w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm dark:text-white text-black pr-[45px] ${selectedMentionToolLogo ? 'pl-10' : ''
-                  }`}
+                  }
+                  ${showRAG ? 'pl-20' : ''
+                  }
+                  `}
                 autoFocus
                 spellCheck={false}
                 autoComplete="off"
@@ -482,6 +489,7 @@ export default function Page() {
                   if (value.trim() === '') {
                     setSelectedMentionTool(null);
                     setSelectedMentionToolLogo(null);
+                    setShowRAG(false);
                   }
                 }}
               />
