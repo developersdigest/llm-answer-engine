@@ -1,3 +1,4 @@
+import { mentionToolConfig } from './mentionToolConfig';
 // @mentionFunctions 
 import { streamChatCompletion } from './mentionFunctions/streamChatCompletion';
 import { portKeyAIGateway } from './mentionFunctions/portKeyAIGateway';
@@ -14,3 +15,16 @@ export const mentionFunctions: MentionFunctions = {
     portKeyAIGatewayTogetherAI,
     falAiStableDiffusion3Medium
 };
+
+export async function lookupTool(mentionTool: string, userMessage: string, streamable: any, file?: string) {
+    const toolInfo = mentionToolConfig.mentionTools.find(tool => tool.id === mentionTool);
+    if (toolInfo) {
+        if (file) {
+            const decodedFile = await Buffer.from(file, 'base64').toString('utf-8').replace(/^data:image\/\w+;base64,/, '');
+            await mentionFunctions[toolInfo.functionName](mentionTool, userMessage + "File Content: " + decodedFile, streamable);
+        } else {
+            await mentionFunctions[toolInfo.functionName](mentionTool, userMessage, streamable);
+        }
+        return;
+    }
+}

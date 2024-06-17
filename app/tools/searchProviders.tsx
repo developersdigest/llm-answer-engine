@@ -1,5 +1,19 @@
+"use server";
 import { SearchResult } from '@/components/answer/SearchResultsComponent';
 import { config } from '../config';
+
+export async function getSearchResults(userMessage: string): Promise<any> {
+    switch (config.searchProvider) {
+        case "brave":
+            return braveSearch(userMessage);
+        case "serper":
+            return serperSearch(userMessage);
+        case "google":
+            return googleSearch(userMessage);
+        default:
+            return Promise.reject(new Error(`Unsupported search provider: ${config.searchProvider}`));
+    }
+}
 
 export async function braveSearch(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
     try {

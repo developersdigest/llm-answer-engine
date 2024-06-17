@@ -46,8 +46,8 @@ const VideosComponent: React.FC<VideosComponentProps> = ({ videos }) => {
 
     // 8. Define the 'VideosSkeleton' component to display a loading skeleton while videos are loading
     const VideosSkeleton = () => (
-        <div className="w-full p-1">
-            <div className="w-full overflow-hidden aspect-video">
+        <div className="w-full p-1 ">
+            <div className="w-full overflow-hidden aspect-video mt-5">
                 <div className="w-full h-full bg-gray-300 dark:bg-gray-700 rounded animate-pulse"></div>
             </div>
         </div>
