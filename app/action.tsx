@@ -5,13 +5,11 @@ import { config } from './config';
 import { functionCalling } from './function-calling';
 import { getSearchResults, getImages, getVideos } from './tools/searchProviders';
 import { get10BlueLinksContents, processAndVectorizeContent } from './tools/contentProcessing';
-import { setInSemanticCache, clearSemanticCache } from './tools/semanticCache';
+import { setInSemanticCache, clearSemanticCache, initializeSemanticCache, getFromSemanticCache } from './tools/semanticCache';
 import { relevantQuestions } from './tools/generateRelevantQuestions';
 import { streamingChatCompletion } from './tools/streamingChatCompletion';
 import { checkRateLimit } from './tools/rateLimiting';
 import { lookupTool } from './tools/mentionTools';
-import { SemanticCache } from "@upstash/semantic-cache";
-import { Index } from "@upstash/vector";
 
 async function myAction(userMessage: string, mentionTool: string | null, logo: string | null, file: string): Promise<any> {
   "use server";
@@ -20,15 +18,12 @@ async function myAction(userMessage: string, mentionTool: string | null, logo: s
   (async () => {
     await checkRateLimit(streamable);
 
-    let semanticCache: SemanticCache | undefined;
-    if (config.useSemanticCache) {
-      const index = new Index();
-      semanticCache = new SemanticCache({ index, minProximity: 0.95 });
-      const cachedData = await semanticCache.get(userMessage);
-      if (cachedData) {
-        streamable.update({ cachedData });
-        return;
-      }
+    await initializeSemanticCache();
+
+    const cachedData = await getFromSemanticCache(userMessage);
+    if (cachedData) {
+      streamable.update({ cachedData });
+      return;
     }
 
     if (mentionTool) {
