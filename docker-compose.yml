@@ -9,6 +9,6 @@ services:
       - SERPER_API=your_serper_api_key
 # uncomment the following to change the default config (ollama, etc)
 #    volumes:
-#      - $PWD/config.tsx:/home/node/app/app/config.tsx:ro
+#      - $PWD/app/config.tsx:/home/node/app/app/config.tsx:ro
     ports:
       - 3000:3000
