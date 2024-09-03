@@ -18,6 +18,6 @@ export const config = {
     nonOllamaBaseURL: 'https://api.groq.com/openai/v1', //Groq: https://api.groq.com/openai/v1 // OpenAI: https://api.openai.com/v1 
     useFunctionCalling: true, // Set to true to enable function calling and conditional streaming UI (currently in beta)
     useRateLimiting: false, // Uses Upstash rate limiting to limit the number of requests per user
-    useSemanticCache: true, // Uses Upstash semantic cache to store and retrieve data for faster response times
-    usePortkey: true, // Uses Portkey for AI Gateway in @mentions (currently in beta) see config-tools.tsx to configure + mentionTools.tsx for source code
+    useSemanticCache: false, // Uses Upstash semantic cache to store and retrieve data for faster response times
+    usePortkey: false, // Uses Portkey for AI Gateway in @mentions (currently in beta) see config-tools.tsx to configure + mentionTools.tsx for source code
 }
