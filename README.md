@@ -53,10 +53,17 @@ This repository contains the code and instructions needed to build a sophisticat
 
 ## Getting Started
 
-### Prerequisites
+### Prerequisites 
+
+- Obtain API keys from OpenAI, Groq, Brave Search, and Serper.
+
+#### Prerequisites for Non-Docker Installation
 
 - Ensure Node.js and npm are installed on your machine.
-- Obtain API keys from OpenAI, Groq, Brave Search, and Serper.
+
+#### Prerequisites for Docker Installation
+
+- Ensure Docker and docker compose are installed on your machine.
 
 ### Obtaining API Keys
 
@@ -71,7 +78,30 @@ This repository contains the code and instructions needed to build a sophisticat
     ```
     git clone https://github.com/developersdigest/llm-answer-engine.git
     ```
-2. Install the required dependencies:
+2. Move in the directory
+    ```
+    cd llm-answer-engine
+    ```
+
+#### Docker Installation
+
+3. Edit the `docker-compose.yml` file and add your API keys
+
+4. Running the Server
+
+To start the server, execute:
+```
+docker compose up -d #for v2
+```
+or
+```
+docker-compose up -d #for v1
+```
+the server will be listening on the specified port.
+
+#### Non-Docker Installation
+
+3. Install the required dependencies:
     ```
     npm install
     ```
@@ -79,15 +109,14 @@ This repository contains the code and instructions needed to build a sophisticat
     ```
     bun install
     ```
-3. Create a `.env` file in the root of your project and add your API keys:
+4. Create a `.env` file in the root of your project and add your API keys:
     ```
     OPENAI_API_KEY=your_openai_api_key
     GROQ_API_KEY=your_groq_api_key
     BRAVE_SEARCH_API_KEY=your_brave_search_api_key
     SERPER_API=your_serper_api_key
     ```
-
-### Running the Server
+5. Running the Server
 
 To start the server, execute:
 ```
