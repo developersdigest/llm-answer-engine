@@ -72,6 +72,16 @@ This repository contains the code and instructions needed to build a sophisticat
 - **Brave Search API Key**: [Obtain your Brave Search API key here](https://brave.com/search/api/).
 - **Serper API Key**: [Get your Serper API key here](https://serper.dev/).
 
+### Quick Clone and Deploy
+
+Simple, Easy, Fast and Free - deploy to vercel
+
+> Make Sure to fill all the API Keys required for the Installation.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdevelopersdigest%2Fllm-answer-engine&env=OPENAI_API_KEY,GROQ_API_KEY,BRAVE_SEARCH_API_KEY,SERPER_API&envDescription=ALL%20API%20KEYS%20are%20needed%20for%20this%20application.%20If%20you%20are%20not%20using%20OpenAI%20KEY%20and%20Using%20Groq%20Instead%2C%20then%20just%20enter%20a%20random%20string%20in%20the%20OpenAI%20Key%20section%20so%20it%20wont%20generate%20any%20error%20while%20building%20the%20project.&project-name=llm-answer-engine&repository-name=llm-answer-engine&skippable-integrations=1)
+
+
+
 ### Installation
 
 1. Clone the repository:
