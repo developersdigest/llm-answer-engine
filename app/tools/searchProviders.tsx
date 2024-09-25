@@ -10,6 +10,10 @@ export async function getSearchResults(userMessage: string): Promise<any> {
             return serperSearch(userMessage);
         case "google":
             return googleSearch(userMessage);
+        case "duckduckgo":
+            return duckDuckGoSearch(userMessage);
+        case "duckduckgo-serpapi":
+            return duckDuckGoUsingSerpApi(userMessage);
         default:
             return Promise.reject(new Error(`Unsupported search provider: ${config.searchProvider}`));
     }
@@ -43,6 +47,72 @@ export async function braveSearch(message: string, numberOfPagesToScan = config.
     }
 }
 
+/**
+ * Performs a search using DuckDuckGo's API and returns formatted search results.
+ *
+ * @param message - The search query string.
+ * @param numberOfPagesToScan - The maximum number of results to return. Defaults to the value in config.
+ * @returns A Promise that resolves to an array of SearchResult objects.
+ * @throws Will throw an error if the API request fails or returns an invalid response.
+ */
+export async function duckDuckGoSearch(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
+    try {
+        console.log('DuckDuckGo Search');
+        const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(message)}&format=json&pretty=1`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const jsonResponse = await response.json();
+        if (!jsonResponse.RelatedTopics) {
+            throw new Error('Invalid API response format');
+        }
+        const final = jsonResponse.RelatedTopics
+            .filter((result: any) => result.FirstURL && result.Text) // Filter out results without URL or Text
+            .slice(0, numberOfPagesToScan) // Limit results to numberOfPagesToScan
+            .map((result: any): SearchResult => ({
+                title: result.Text,
+                link: result.FirstURL,
+                favicon: `https://icons.duckduckgo.com/ip3/${new URL(result.FirstURL).hostname}.ico`
+            }));
+        return final;
+    } catch (error) {
+        console.error('Error fetching duckduckgo search results:', error);
+        throw error;
+    }
+}
+/**
+ * Performs search using SerpApi with duckduckgo
+ *
+ * @param message - The search query string.
+ * @param numberOfPagesToScan - The maximum number of results to return. Defaults to the value in config.
+ * @returns A Promise that resolves to an array of SearchResult objects.
+ * @throws Will throw an error if the API request fails or returns an invalid response.
+ */
+export async function duckDuckGoUsingSerpApi(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
+    try {
+        const url = `https://serpapi.com/search.json?engine=duckduckgo&q=${encodeURIComponent(message)}&api_key=${process.env.SERPAPI_API_KEY}&num=${numberOfPagesToScan}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const jsonResponse = await response.json();
+        if (!jsonResponse.organic_results) {
+            throw new Error('Invalid API response format');
+        }
+        const final = jsonResponse.organic_results.map((result: any): SearchResult => ({
+            title: result.title,
+            link: result.link,
+            favicon: result.favicon || ''
+        }));
+        return final;
+    } catch (error) {
+        console.error('Error fetching SerpApi DuckDuckGo search results:', error);
+        throw error;
+    }
+}
+
+
 export async function googleSearch(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
     try {
         const url = `https://www.googleapis.com/customsearch/v1?key=${process.env.GOOGLE_SEARCH_API_KEY}&cx=${process.env.GOOGLE_CX}&q=${encodeURIComponent(message)}&num=${numberOfPagesToScan}`;
@@ -66,7 +136,7 @@ export async function googleSearch(message: string, numberOfPagesToScan = config
     }
 }
 
-export async function serperSearch(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
+export async function serperSearch(message: string, _numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
     const url = 'https://google.serper.dev/search';
     const data = JSON.stringify({
         "q": message
@@ -145,7 +215,7 @@ export async function getImages(message: string): Promise<{ title: string; link:
         return filteredLinks.slice(0, 9);
     } catch (error) {
         console.error('Error fetching images:', error);
-        throw error;
+        return [];
     }
 }
 
@@ -191,6 +261,6 @@ export async function getVideos(message: string): Promise<{ imageUrl: string, li
         return filteredLinks.slice(0, 9);
     } catch (error) {
         console.error('Error fetching videos:', error);
-        throw error;
+        return [];
     }
 }
