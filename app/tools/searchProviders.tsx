@@ -10,6 +10,10 @@ export async function getSearchResults(userMessage: string): Promise<any> {
             return serperSearch(userMessage);
         case "google":
             return googleSearch(userMessage);
+        case "duckduckgo":
+            return duckduckgo_search(userMessage);
+        case "duckduckgo-serpapi":
+            return duckduckgo_using_serpapi(userMessage);
         default:
             return Promise.reject(new Error(`Unsupported search provider: ${config.searchProvider}`));
     }
@@ -42,6 +46,73 @@ export async function braveSearch(message: string, numberOfPagesToScan = config.
         throw error;
     }
 }
+
+/**
+ * Performs a search using DuckDuckGo's API and returns formatted search results.
+ *
+ * @param message - The search query string.
+ * @param numberOfPagesToScan - The maximum number of results to return. Defaults to the value in config.
+ * @returns A Promise that resolves to an array of SearchResult objects.
+ * @throws Will throw an error if the API request fails or returns an invalid response.
+ */
+export async function duckduckgo_search(message: string, numberOfPagesToScan = 30): Promise<SearchResult[]> {
+    try {
+        console.log('DuckDuckGo Search');
+        const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(message)}&format=json&pretty=1`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const jsonResponse = await response.json();
+        if (!jsonResponse.RelatedTopics) {
+            throw new Error('Invalid API response format');
+        }
+        const final = jsonResponse.RelatedTopics
+            .filter((result: any) => result.FirstURL && result.Text) // Filter out results without URL or Text
+            .slice(0, numberOfPagesToScan) // Limit results to numberOfPagesToScan
+            .map((result: any): SearchResult => ({
+                title: result.Text,
+                link: result.FirstURL,
+                favicon: `https://icons.duckduckgo.com/ip3/${new URL(result.FirstURL).hostname}.ico`
+            }));
+        return final;
+    } catch (error) {
+        console.error('Error fetching duckduckgo search results:', error);
+        throw error;
+    }
+}
+
+/**
+ * Performs search using SerpApi with duckduckgo
+ *
+ * @param message - The search query string.
+ * @param numberOfPagesToScan - The maximum number of results to return. Defaults to the value in config.
+ * @returns A Promise that resolves to an array of SearchResult objects.
+ * @throws Will throw an error if the API request fails or returns an invalid response.
+ */
+export async function duckduckgo_using_serpapi(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
+    try {
+        const url = `https://serpapi.com/search.json?engine=duckduckgo&q=${encodeURIComponent(message)}&api_key=${process.env.SERPAPI_API_KEY}&num=${numberOfPagesToScan}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const jsonResponse = await response.json();
+        if (!jsonResponse.organic_results) {
+            throw new Error('Invalid API response format');
+        }
+        const final = jsonResponse.organic_results.map((result: any): SearchResult => ({
+            title: result.title,
+            link: result.link,
+            favicon: result.favicon || ''
+        }));
+        return final;
+    } catch (error) {
+        console.error('Error fetching SerpApi DuckDuckGo search results:', error);
+        throw error;
+    }
+}
+
 
 export async function googleSearch(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
     try {
@@ -81,6 +152,7 @@ export async function serperSearch(message: string, numberOfPagesToScan = config
     };
     try {
         const response = await fetch(url, requestOptions);
+        debugger;
         if (!response.ok) {
             throw new Error(`Network response was not ok. Status: ${response.status}`);
         }
