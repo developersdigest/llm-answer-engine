@@ -55,7 +55,7 @@ export async function braveSearch(message: string, numberOfPagesToScan = config.
  * @returns A Promise that resolves to an array of SearchResult objects.
  * @throws Will throw an error if the API request fails or returns an invalid response.
  */
-export async function duckduckgo_search(message: string, numberOfPagesToScan = 30): Promise<SearchResult[]> {
+export async function duckduckgoSearch(message: string, numberOfPagesToScan = 30): Promise<SearchResult[]> {
     try {
         console.log('DuckDuckGo Search');
         const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(message)}&format=json&pretty=1`;
@@ -81,7 +81,6 @@ export async function duckduckgo_search(message: string, numberOfPagesToScan = 3
         throw error;
     }
 }
-
 /**
  * Performs search using SerpApi with duckduckgo
  *
@@ -90,7 +89,7 @@ export async function duckduckgo_search(message: string, numberOfPagesToScan = 3
  * @returns A Promise that resolves to an array of SearchResult objects.
  * @throws Will throw an error if the API request fails or returns an invalid response.
  */
-export async function duckduckgo_using_serpapi(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
+export async function duckduckgoUsingSerpapi(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
     try {
         const url = `https://serpapi.com/search.json?engine=duckduckgo&q=${encodeURIComponent(message)}&api_key=${process.env.SERPAPI_API_KEY}&num=${numberOfPagesToScan}`;
         const response = await fetch(url);
@@ -112,7 +111,6 @@ export async function duckduckgo_using_serpapi(message: string, numberOfPagesToS
         throw error;
     }
 }
-
 export async function googleSearch(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
     try {
         const url = `https://www.googleapis.com/customsearch/v1?key=${process.env.GOOGLE_SEARCH_API_KEY}&cx=${process.env.GOOGLE_CX}&q=${encodeURIComponent(message)}&num=${numberOfPagesToScan}`;
@@ -137,41 +135,39 @@ export async function googleSearch(message: string, numberOfPagesToScan = config
 }
 
 export async function serperSearch(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
-    const url = 'https://google.serper.dev/search';
-    const data = JSON.stringify({
-        "q": message
-    });
-    const requestOptions: RequestInit = {
-        method: 'POST',
-        headers: {
-            'X-API-KEY': process.env.SERPER_API as string,
-            'Content-Type': 'application/json'
-        },
-        body: data
-    };
-    try {
-        const response = await fetch(url, requestOptions);
-        debugger;
-        if (!response.ok) {
-            throw new Error(`Network response was not ok. Status: ${response.status}`);
+    export async function serperSearch(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
+        const url = 'https://google.serper.dev/search';
+        const data = JSON.stringify({
+            "q": message
+        });
+        const requestOptions: RequestInit = {
+            method: 'POST',
+            headers: {
+                'X-API-KEY': process.env.SERPER_API as string,
+                'Content-Type': 'application/json'
+            },
+            body: data
+        };
+        try {
+            const response = await fetch(url, requestOptions);
+            if (!response.ok) {
+                throw new Error(`Network response was not ok. Status: ${response.status}`);
+            }
+            const responseData = await response.json();
+            if (!responseData.organic) {
+                throw new Error('Invalid API response format');
+            }
+            const final = responseData.organic.map((result: any): SearchResult => ({
+                title: result.title,
+                link: result.link,
+                favicon: result.favicons?.[0] || ''
+            }));
+            return final
+        } catch (error) {
+            console.error('Error fetching search results:', error);
+            throw error;
         }
-        const responseData = await response.json();
-        if (!responseData.organic) {
-            throw new Error('Invalid API response format');
-        }
-        const final = responseData.organic.map((result: any): SearchResult => ({
-            title: result.title,
-            link: result.link,
-            favicon: result.favicons?.[0] || ''
-        }));
-        return final
-    } catch (error) {
-        console.error('Error fetching search results:', error);
-        throw error;
-    }
-}
-
-export async function getImages(message: string): Promise<{ title: string; link: string }[]> {
+    }export async function getImages(message: string): Promise<{ title: string; link: string }[]> {
     const url = 'https://google.serper.dev/images';
     const data = JSON.stringify({
         "q": message
