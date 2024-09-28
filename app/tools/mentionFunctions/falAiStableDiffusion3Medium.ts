@@ -1,6 +1,6 @@
 import * as fal from "@fal-ai/serverless-client";
 
-export async function falAiStableDiffusion3Medium(mentionTool: string, userMessage: string, streamable: any): Promise<string | undefined> {
+export async function falAiStableDiffusion3Medium(mentionTool: string, userMessage: string, streamable: any): Promise<void> {
     const result = await fal.subscribe("fal-ai/stable-diffusion-v3-medium", {
         input: {
             prompt: userMessage,
@@ -21,9 +21,9 @@ export async function falAiStableDiffusion3Medium(mentionTool: string, userMessa
         let base64data = Buffer.from(buffer).toString('base64');
         base64data = `data:image/png;base64,${base64data}`;
         streamable.done({ 'falBase64Image': base64data });
-        return undefined;
     } else {
         streamable.done({ 'llmResponseEnd': true });
-        return undefined;
     }
+    // Ensure the function returns void
+    return;
 }

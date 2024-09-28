@@ -1,7 +1,7 @@
 import Portkey from 'portkey-ai';
 import { config } from '../../config';
 
-export async function portKeyAIGatewayTogetherAI(mentionTool: string, userMessage: string, streamable: any) {
+export async function portKeyAIGatewayTogetherAI(mentionTool: string, userMessage: string, streamable: any): Promise<void> {
     if (config.usePortkey) {
         const portkey = new Portkey({
             apiKey: process.env.PORTKEY_API_KEY,
@@ -27,11 +27,13 @@ export async function portKeyAIGatewayTogetherAI(mentionTool: string, userMessag
         for await (const chunk of chatCompletion) {
             if (chunk.choices[0].finish_reason === "COMPLETE" || chunk.choices[0].finish_reason === "stop" || chunk.choices[0].finish_reason === "end_turn") {
                 streamable.done({ 'llmResponseEnd': true });
-                return accumulatedLLMResponse;
+                return;
             } else if (chunk.choices[0].delta) {
                 streamable.update({ 'llmResponse': chunk.choices[0].delta.content });
                 accumulatedLLMResponse += chunk.choices[0].delta.content;
             }
         }
     }
+    // Ensure the function returns void
+    return;
 }

@@ -4,19 +4,21 @@ import { streamChatCompletion } from './mentionFunctions/streamChatCompletion';
 import { portKeyAIGateway } from './mentionFunctions/portKeyAIGateway';
 import { portKeyAIGatewayTogetherAI } from './mentionFunctions/portKeyAIGatewayTogetherAI';
 import { falAiStableDiffusion3Medium } from './mentionFunctions/falAiStableDiffusion3Medium';
+import { brightDataWebScraper } from './mentionFunctions/structuredUnlockSummarize';
 
 type MentionFunctions = {
-    [key: string]: (mentionTool: string, userMessage: string, streamable: any) => Promise<string | undefined>;
+    [key: string]: (mentionTool: string, userMessage: string, streamable: any) => Promise<void>;
 };
 
 export const mentionFunctions: MentionFunctions = {
     streamChatCompletion,
     portKeyAIGateway,
     portKeyAIGatewayTogetherAI,
-    falAiStableDiffusion3Medium
+    falAiStableDiffusion3Medium,
+    brightDataWebScraper,
 };
 
-export async function lookupTool(mentionTool: string, userMessage: string, streamable: any, file?: string) {
+export async function lookupTool(mentionTool: string, userMessage: string, streamable: any, file?: string): Promise<void> {
     const toolInfo = mentionToolConfig.mentionTools.find(tool => tool.id === mentionTool);
     if (toolInfo) {
         if (file) {
@@ -25,6 +27,5 @@ export async function lookupTool(mentionTool: string, userMessage: string, strea
         } else {
             await mentionFunctions[toolInfo.functionName](mentionTool, userMessage, streamable);
         }
-        return;
     }
 }

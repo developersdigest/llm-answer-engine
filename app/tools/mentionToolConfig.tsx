@@ -17,5 +17,7 @@ export const mentionToolConfig = {
         { id: 'Qwen/Qwen2-72B-Instruct', name: 'Qwen2 - 72B', logo: 'https://avatars.githubusercontent.com/u/141221163?s=200&v=4', functionName: 'portKeyAIGatewayTogetherAI', enableRAG: true },
         // FAL.AI - Stable Diffusion 3 Medium
         { id: 'fal-ai/stable-diffusion-v3-medium', name: 'fal.ai Stable Diffusion 3 ', logo: 'https://avatars.githubusercontent.com/u/74778219?s=200&v=4', functionName: 'falAiStableDiffusion3Medium' },
+        // Bright Data - Targeted Web Scraping
+        { id: 'bright-data-web-unlock', name: 'Bright Data - Web Unlock / Puppeteer', logo: './bright-data-logo.png', functionName: 'brightDataWebScraper', enableRAG: false },
     ],
 };

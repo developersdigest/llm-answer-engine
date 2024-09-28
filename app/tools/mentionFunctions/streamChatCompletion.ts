@@ -14,7 +14,7 @@ if (config.useOllamaInference) {
     });
 }
 
-export async function streamChatCompletion(mentionTool: string, userMessage: string, streamable: any) {
+export async function streamChatCompletion(mentionTool: string, userMessage: string, streamable: any): Promise<void> {
     const chatCompletion = await openai.chat.completions.create({
         messages: [
             {
@@ -35,7 +35,10 @@ export async function streamChatCompletion(mentionTool: string, userMessage: str
             accumulatedLLMResponse += chunk.choices[0].delta.content;
         } else if (chunk.choices[0].finish_reason === "stop") {
             streamable.done({ 'llmResponseEnd': true });
-            return accumulatedLLMResponse;
+            // Ensure the function returns void
+            return;
         }
     }
+    // Ensure the function returns void
+    return;
 }
