@@ -4,9 +4,21 @@
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
+import { config } from '../../config';
 
 // 2. Initialize OpenAI client
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let openai: OpenAI;
+if (config.useOllamaInference) {
+    openai = new OpenAI({
+        baseURL: 'http://localhost:11434/v1',
+        apiKey: 'ollama'
+    });
+} else {
+    openai = new OpenAI({
+        baseURL: config.nonOllamaBaseURL,
+        apiKey: config.inferenceAPIKey
+    });
+}
 
 // Define Zod schema for URL extraction
 const UrlExtraction = z.object({
@@ -18,7 +30,7 @@ export async function brightDataWebScraper(mentionTool: string, userMessage: str
     let targetUrl: string;
     try { 
         // 4. Extract URL from user message using parsed output feature
-        const urlCompletion = await openai.beta.chat.completions.parse({
+        const urlCompletion = await openai.chat.completions.create({
             model: "gpt-4o-2024-08-06",
             messages: [
                 { role: "system", content: "Extract the most likely valid URL from a natural language query." },
@@ -28,7 +40,14 @@ export async function brightDataWebScraper(mentionTool: string, userMessage: str
         });
 
         // 5. Parse and validate URL data
-        const extractedUrl = urlCompletion.choices[0]?.message?.parsed?.url ?? '';
+        const messageContent = urlCompletion.choices[0]?.message?.content ?? '';
+        let extractedUrl = '';
+        try {
+            const parsedContent = JSON.parse(messageContent);
+            extractedUrl = parsedContent.url ?? '';
+        } catch {
+            extractedUrl = '';
+        }
 
         if (!extractedUrl) {
             streamable.update({ llmResponse: `No valid URL found in the user message \n\n` });

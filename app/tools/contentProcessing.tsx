@@ -1,6 +1,6 @@
 
 import { config } from '../config';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import { Document as DocumentInterface } from 'langchain/document';

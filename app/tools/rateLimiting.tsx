@@ -15,7 +15,8 @@ if (config.useRateLimiting) {
 
 export async function checkRateLimit(streamable: any) {
     if (config.useRateLimiting && ratelimit) {
-        const identifier = headers().get('x-forwarded-for') || headers().get('x-real-ip') || headers().get('cf-connecting-ip') || headers().get('client-ip') || "";
+        const headersList = await headers();
+        const identifier = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || headersList.get('cf-connecting-ip') || headersList.get('client-ip') || "";
         const { success } = await ratelimit.limit(identifier);
         streamable.done({ 'status': 'rateLimitReached' });
         return success;
