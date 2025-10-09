@@ -1,0 +1,7 @@
+[
+  {
+    "title": "Architecture",
+    "url": "https://python.langchain.com/docs/concepts/architecture/",
+    "snippet": "LangChain is a framework that consists of a number of packages. Diagram outlining the hierarchical organization of the LangChain framework."
+  }
+]

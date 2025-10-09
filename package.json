@@ -72,6 +72,7 @@
   },
   "devDependencies": {
     "@types/d3-scale": "^4.0.8",
+    "@types/lodash": "^4.17.20",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-copy-to-clipboard": "^5.0.7",
@@ -82,7 +83,8 @@
     "postcss": "^8",
     "prettier": "^3.2.5",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   },
   "overrides": {
     "@langchain/community": {
