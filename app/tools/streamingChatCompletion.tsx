@@ -45,7 +45,7 @@ export async function streamingChatCompletion(
         if (
             chunk.choices[0].delta &&
             chunk.choices[0].finish_reason !== "stop" &&
-            chunk.choices[0].delta.content !== null
+            chunk.choices[0].delta.content
         ) {
             streamable.update({ llmResponse: chunk.choices[0].delta.content });
             accumulatedLLMResponse += chunk.choices[0].delta.content;

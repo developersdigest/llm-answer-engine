@@ -21,30 +21,35 @@ interface SearchResult {
     favicon: string;
 }
 
-export const relevantQuestions = async (sources: SearchResult[], userMessage: String): Promise<any> => {
-    return await openai.chat.completions.create({
-        messages: [
-            {
-                role: "system",
-                content: `
+export const relevantQuestions = async (sources: SearchResult[], userMessage: string): Promise<any> => {
+    try {
+        return await openai.chat.completions.create({
+            messages: [
+                {
+                    role: "system",
+                    content: `
             You are a Question generator who generates an array of 3 follow-up questions in JSON format.
             The JSON schema should include:
             {
               "original": "The original search query or context",
               "followUp": [
                 "Question 1",
-                "Question 2", 
+                "Question 2",
                 "Question 3"
               ]
             }
             `,
-            },
-            {
-                role: "user",
-                content: `Generate follow-up questions based on the top results from a similarity search: ${JSON.stringify(sources)}. The original search query is: "${userMessage}".`,
-            },
-        ],
-        model: config.inferenceModel,
-        response_format: { type: "json_object" },
-    });
+                },
+                {
+                    role: "user",
+                    content: `Generate follow-up questions based on the top results from a similarity search: ${JSON.stringify(sources)}. The original search query is: "${userMessage}".`,
+                },
+            ],
+            model: config.inferenceModel,
+            response_format: { type: "json_object" },
+        });
+    } catch (error) {
+        console.error('Error generating relevant questions:', error);
+        return { error: 'Failed to generate follow-up questions.' };
+    }
 };

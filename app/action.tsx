@@ -16,7 +16,9 @@ async function myAction(userMessage: string, mentionTool: string | null, logo: s
   const streamable = createStreamableValue({});
 
   (async () => {
-    await checkRateLimit(streamable);
+    if (!(await checkRateLimit(streamable))) {
+      return;
+    }
 
     await initializeSemanticCache();
 
@@ -27,38 +29,115 @@ async function myAction(userMessage: string, mentionTool: string | null, logo: s
     }
 
     if (mentionTool) {
-      await lookupTool(mentionTool, userMessage, streamable, file);
+      // If a mention tool is used, we don't want to proceed with the rest of the flow.
+      return await lookupTool(mentionTool, userMessage, streamable, file);
     }
 
-    const [images, sources, videos, conditionalFunctionCallUI] = await Promise.all([
+    // Call external providers in parallel but handle failures individually.
+    // A non-OK response from any provider should not crash the whole flow.
+    const promises: Promise<any>[] = [
       getImages(userMessage),
       getSearchResults(userMessage),
       getVideos(userMessage),
-      functionCalling(userMessage),
-    ]);
-
-    streamable.update({ searchResults: sources, images, videos });
-
+    ];
     if (config.useFunctionCalling) {
-      streamable.update({ conditionalFunctionCallUI });
+      promises.push(functionCalling(userMessage));
     }
+    const settledResults = await Promise.allSettled(promises);
+    const [imagesResult, searchResultsResult, videosResult] = settledResults;
+
+    let images: any[] = [];
+    let sources: any[] = [];
+    let videos: any[] = [];
+    let conditionalFunctionCallUI: any = null;
+
+    // Helper to normalize reason into string
+    const reasonToString = (reason: any) => {
+      if (typeof reason === 'string') return reason;
+      if (reason instanceof Error) return reason.message;
+      try {
+        return JSON.stringify(reason);
+      } catch (e) {
+        return 'An unknown error occurred';
+      }
+    };
+
+    // images
+    if (imagesResult.status === 'fulfilled') {
+      images = imagesResult.value || [];
+    } else {
+      const details = reasonToString(imagesResult.reason);
+      console.error('getImages failed:', details);
+      streamable.update({ status: `An error occurred while fetching images: ${details}` });
+    }
+
+    // search results
+    if (searchResultsResult.status === 'fulfilled') {
+      sources = searchResultsResult.value || [];
+    } else {
+      const details = reasonToString(searchResultsResult.reason);
+      console.error('getSearchResults failed:', details);
+      streamable.update({ status: `An error occurred while fetching search results: ${details}` });
+    }
+
+    // videos
+    if (videosResult.status === 'fulfilled') {
+      videos = videosResult.value || [];
+    } else {
+      const details = reasonToString(videosResult.reason);
+      console.error('getVideos failed:', details);
+      streamable.update({ status: `An error occurred while fetching videos: ${details}` });
+    }
+
+    // function calling (UI helper)
+    if (config.useFunctionCalling) {
+      const functionCallingResult = settledResults[3];
+      if (functionCallingResult && functionCallingResult.status === 'fulfilled') {
+        conditionalFunctionCallUI = functionCallingResult.value;
+      } else if (functionCallingResult) {
+        const details = reasonToString(functionCallingResult.reason);
+        console.error('functionCalling failed:', details);
+        streamable.update({ status: `An error occurred during function calling: ${details}` });
+      }
+    }
+
+    streamable.update({ 
+      searchResults: sources,
+      images,
+      videos,
+      conditionalFunctionCallUI: conditionalFunctionCallUI, 
+    });
 
     const html = await get10BlueLinksContents(sources);
     const vectorResults = await processAndVectorizeContent(html, userMessage);
     const accumulatedLLMResponse = await streamingChatCompletion(userMessage, vectorResults, streamable);
-    const followUp = await relevantQuestions(sources, userMessage);
+    const followUpResponse = await relevantQuestions(sources, userMessage);
 
-    streamable.update({ followUp });
+    let followUp = null;
+    if (followUpResponse && !followUpResponse.error && followUpResponse.choices?.[0]?.message?.content) {
+      try {
+        // The response is a JSON string, so we need to parse it.
+        const parsedFollowUp = JSON.parse(followUpResponse.choices[0].message.content);
+        followUp = { choices: [{ message: { content: parsedFollowUp } }] };
+        streamable.update({ followUp });
+      } catch (e) {
+        console.error("Failed to parse follow-up questions:", e);
+      }
+    } else if (followUpResponse.error) {
+      streamable.update({ status: `An error occurred while generating follow-up questions: ${followUpResponse.error}` });
+    }
 
-    setInSemanticCache(userMessage, {
-      searchResults: sources,
-      images,
-      videos,
-      conditionalFunctionCallUI: config.useFunctionCalling ? conditionalFunctionCallUI : undefined,
-      llmResponse: accumulatedLLMResponse,
-      followUp,
-      semanticCacheKey: userMessage
-    });
+    if (accumulatedLLMResponse.trim().length > 0) {
+      setInSemanticCache(userMessage, {
+        searchResults: sources,
+        images,
+        videos,
+        conditionalFunctionCallUI: conditionalFunctionCallUI, 
+        llmResponse: accumulatedLLMResponse,
+        followUp,
+        semanticCacheKey: userMessage
+      });
+    }
 
     streamable.done({ status: 'done' });
   })();
