@@ -1,0 +1,18 @@
+#! llm-answer-engine-expose.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: llm-answer-engine
+    namespace: llm-answer-engine
+    labels:
+        com.docker.compose.project: llm-answer-engine
+        com.docker.compose.service: llm-answer-engine
+spec:
+    selector:
+        com.docker.compose.project: llm-answer-engine
+        com.docker.compose.service: llm-answer-engine
+    ports:
+        - name: llm-answer-3000
+          port: 3000
+          targetPort: llm-answer-3000

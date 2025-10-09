@@ -65,16 +65,18 @@ const SearchResultsComponent = ({ searchResults }: { searchResults: SearchResult
     );
 
     // 11. Render the 'SearchResultsComponent'
+    // Only render if there are search results
+    if (!searchResults || searchResults.length === 0) {
+        return null;
+    }
+
     return (
         <div className="dark:bg-slate-800 bg-white shadow-lg rounded-lg p-4 mt-4">
             <div className="flex items-center">
                 <h2 className="text-lg font-semibold flex-grow dark:text-white text-black">Sources</h2>
             </div>
             <div className="flex flex-wrap my-2">
-                {searchResults.length === 0 ? (
-                    // 12. Render the 'SearchResultsSkeleton' if there are no search results
-                    <SearchResultsSkeleton />
-                ) : (
+                {
                     <>
                         {/* 13. Render the search results with favicon, title, and link */}
                         {visibleResults.map((result, index) => (
@@ -116,7 +118,7 @@ const SearchResultsComponent = ({ searchResults }: { searchResults: SearchResult
                             </div>
                         </div>
                     </>
-                )}
+                }
             </div>
         </div >
     )
