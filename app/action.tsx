@@ -3,6 +3,7 @@
 import { createAI, createStreamableValue } from 'ai/rsc';
 import { config } from './config';
 import { functionCalling } from './function-calling';
+import type { SearchResult } from '@/components/answer/SearchResultsComponent';
 import { getSearchResults, getImages, getVideos } from './tools/searchProviders';
 import { get10BlueLinksContents, processAndVectorizeContent } from './tools/contentProcessing';
 import { setInSemanticCache, clearSemanticCache, initializeSemanticCache, getFromSemanticCache } from './tools/semanticCache';
@@ -30,28 +31,31 @@ async function myAction(userMessage: string, mentionTool: string | null, logo: s
       await lookupTool(mentionTool, userMessage, streamable, file);
     }
 
-    const [images, sources, videos, conditionalFunctionCallUI] = await Promise.all([
+    const [images, sourcesRaw, videos, conditionalFunctionCallUI] = await Promise.all([
       getImages(userMessage),
       getSearchResults(userMessage),
       getVideos(userMessage),
       functionCalling(userMessage),
     ]);
 
-    streamable.update({ searchResults: sources, images, videos });
+    // For UI: stream decomposed queries
+    streamable.update({ searchResults: sourcesRaw, images, videos });
 
     if (config.useFunctionCalling) {
       streamable.update({ conditionalFunctionCallUI });
     }
 
-    const html = await get10BlueLinksContents(sources);
+    // For vectorization and LLM: flatten sources
+    const sources = Array.isArray(sourcesRaw[0]) ? sourcesRaw.flat() : sourcesRaw;
+    const html = await get10BlueLinksContents(sources as SearchResult[]);
     const vectorResults = await processAndVectorizeContent(html, userMessage);
     const accumulatedLLMResponse = await streamingChatCompletion(userMessage, vectorResults, streamable);
-    const followUp = await relevantQuestions(sources, userMessage);
+    const followUp = await relevantQuestions(sources as SearchResult[], userMessage);
 
     streamable.update({ followUp });
 
     setInSemanticCache(userMessage, {
-      searchResults: sources,
+      searchResults: sourcesRaw,
       images,
       videos,
       conditionalFunctionCallUI: config.useFunctionCalling ? conditionalFunctionCallUI : undefined,

@@ -12,3 +12,5 @@ services:
 #      - $PWD/app/config.tsx:/home/node/app/app/config.tsx:ro
     ports:
       - 3000:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
