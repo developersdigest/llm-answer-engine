@@ -3,10 +3,10 @@ services:
   llm-answer-engine:
     build: .
     environment:
-      - OPENAI_API_KEY=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
-      - GROQ_API_KEY=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
-      - BRAVE_SEARCH_API_KEY=BSATW622E1QYoxvT7F6XhXC5GoUXaUC
-      - SERPER_API=5b904ef9a655b6a85b36d24353c4896ab90634f7
+      - OPENAI_API_KEY=your_openai_api_key
+      - GROQ_API_KEY=your_groq_api_key
+      - BRAVE_SEARCH_API_KEY=your_brave_search_api_key
+      - SERPER_API=your_serper_api_key
 # uncomment the following to change the default config (ollama, etc)
 #    volumes:
 #      - $PWD/app/config.tsx:/home/node/app/app/config.tsx:ro
