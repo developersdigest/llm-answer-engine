@@ -1,0 +1,8 @@
+#! 0-llm-answer-engine-namespace.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: llm-answer-engine
+    labels:
+        com.docker.compose.project: llm-answer-engine

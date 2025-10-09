@@ -1,0 +1,41 @@
+#! llm-answer-engine-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: llm-answer-engine
+    namespace: llm-answer-engine
+    labels:
+        com.docker.compose.project: llm-answer-engine
+        com.docker.compose.service: llm-answer-engine
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: llm-answer-engine
+            com.docker.compose.service: llm-answer-engine
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: llm-answer-engine
+                com.docker.compose.service: llm-answer-engine
+                com.docker.compose.network.default: "true"
+        spec:
+            containers:
+                - name: llm-answer-engine
+                  image: llm-answer-engine-llm-answer-engine
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: BRAVE_SEARCH_API_KEY
+                      value: "YOUR_BRAVE_SEARCH_API_KEY"
+                    - name: GROQ_API_KEY
+                      value: "YOUR_GROQ_API_KEY"
+                    - name: OPENAI_API_KEY
+                      value: "YOUR_OPENAI_API_KEY"
+                    - name: SERPER_API
+                      value: "YOUR_SERPER_API"
+                  ports:
+                    - name: llm-answer-3000
+                      containerPort: 3000

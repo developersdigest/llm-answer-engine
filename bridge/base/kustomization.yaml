@@ -1,0 +1,10 @@
+#! kustomization.yaml
+# Generated code, do not edit
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+    - 0-llm-answer-engine-namespace.yaml
+    - default-network-policy.yaml
+    - llm-answer-engine-deployment.yaml
+    - llm-answer-engine-expose.yaml
+    - llm-answer-engine-service.yaml

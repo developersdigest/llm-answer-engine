@@ -1,0 +1,21 @@
+# check if there is at least one published port
+
+#! llm-answer-engine-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: llm-answer-engine-published
+    namespace: llm-answer-engine
+    labels:
+        com.docker.compose.project: llm-answer-engine
+        com.docker.compose.service: llm-answer-engine
+spec:
+    selector:
+        com.docker.compose.project: llm-answer-engine
+        com.docker.compose.service: llm-answer-engine
+    ports:
+        - name: llm-answer-3000
+          port: 3000
+          protocol: TCP
+          targetPort: llm-answer-3000

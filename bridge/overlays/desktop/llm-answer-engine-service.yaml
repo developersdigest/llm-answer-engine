@@ -1,0 +1,11 @@
+# check if there is at least one published port
+
+#! llm-answer-engine-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: llm-answer-engine-published
+    namespace: llm-answer-engine
+spec:
+    type: LoadBalancer

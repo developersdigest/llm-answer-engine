@@ -1,12 +1,8 @@
-version: "3"
 services:
   llm-answer-engine:
     build: .
-    environment:
-      - OPENAI_API_KEY=your_openai_api_key
-      - GROQ_API_KEY=your_groq_api_key
-      - BRAVE_SEARCH_API_KEY=your_brave_search_api_key
-      - SERPER_API=your_serper_api_key
+    env_file:
+      - .env.docker
 # uncomment the following to change the default config (ollama, etc)
 #    volumes:
 #      - $PWD/app/config.tsx:/home/node/app/app/config.tsx:ro
