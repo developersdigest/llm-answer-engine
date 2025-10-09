@@ -244,15 +244,15 @@ export default function Page() {
             currentMessage.images = typedMessage.images ? [...typedMessage.images] : currentMessage.images;
             currentMessage.videos = typedMessage.videos ? [...typedMessage.videos] : currentMessage.videos;
             currentMessage.followUp = typedMessage.followUp || currentMessage.followUp;
-            currentMessage.semanticCacheKey = messagesCopy[messageIndex];
+            currentMessage.semanticCacheKey = typedMessage.semanticCacheKey || currentMessage.semanticCacheKey;
             currentMessage.falBase64Image = typedMessage.falBase64Image;
 
 
             if (typedMessage.conditionalFunctionCallUI) {
               const functionCall = typedMessage.conditionalFunctionCallUI;
-              if (functionCall.type === 'places') currentMessage.places = functionCall.places;
-              if (functionCall.type === 'shopping') currentMessage.shopping = functionCall.shopping;
-              if (functionCall.type === 'ticker') currentMessage.ticker = functionCall.data;
+              if (functionCall.places) currentMessage.places = functionCall.places;
+              if (functionCall.shopping) currentMessage.shopping = functionCall.shopping;
+              if (functionCall.ticker) currentMessage.ticker = functionCall.ticker;
               if (functionCall.trackId) currentMessage.spotify = functionCall.trackId;
             }
 
@@ -270,9 +270,9 @@ export default function Page() {
 
               if (data.conditionalFunctionCallUI) {
                 const functionCall = data.conditionalFunctionCallUI;
-                if (functionCall.type === 'places') currentMessage.places = functionCall.places;
-                if (functionCall.type === 'shopping') currentMessage.shopping = functionCall.shopping;
-                if (functionCall.type === 'ticker') currentMessage.ticker = functionCall.data;
+                if (functionCall.places) currentMessage.places = functionCall.places;
+                if (functionCall.shopping) currentMessage.shopping = functionCall.shopping;
+                if (functionCall.ticker) currentMessage.ticker = functionCall.ticker;
                 if (functionCall.trackId) currentMessage.spotify = functionCall.trackId;
               }
             }

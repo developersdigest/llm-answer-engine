@@ -25,7 +25,8 @@ export async function braveSearch(message: string, numberOfPagesToScan = config.
             }
         });
         if (!response.ok) {
-            console.log('Issue with response from Brave Search API');
+            const body = await response.text().catch(() => null);
+            throw new Error(`Brave Search API returned ${response.status}: ${body || 'no response body'}`);
         }
         const jsonResponse = await response.json();
         if (!jsonResponse.web || !jsonResponse.web.results) {
@@ -67,6 +68,10 @@ export async function googleSearch(message: string, numberOfPagesToScan = config
 }
 
 export async function serperSearch(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
+    const serperApiKey = process.env.SERPER_API;
+    if (!serperApiKey) {
+        throw new Error("SERPER_API key is not set in environment variables.");
+    }
     const url = 'https://google.serper.dev/search';
     const data = JSON.stringify({
         "q": message
@@ -74,7 +79,7 @@ export async function serperSearch(message: string, numberOfPagesToScan = config
     const requestOptions: RequestInit = {
         method: 'POST',
         headers: {
-            'X-API-KEY': process.env.SERPER_API as string,
+            'X-API-KEY': serperApiKey,
             'Content-Type': 'application/json'
         },
         body: data
@@ -82,7 +87,8 @@ export async function serperSearch(message: string, numberOfPagesToScan = config
     try {
         const response = await fetch(url, requestOptions);
         if (!response.ok) {
-            throw new Error(`Network response was not ok. Status: ${response.status}`);
+            const body = await response.text().catch(() => null);
+            throw new Error(`Serper search API returned ${response.status}: ${body || 'no response body'}`);
         }
         const responseData = await response.json();
         if (!responseData.organic) {
@@ -101,6 +107,10 @@ export async function serperSearch(message: string, numberOfPagesToScan = config
 }
 
 export async function getImages(message: string): Promise<{ title: string; link: string }[]> {
+    const serperApiKey = process.env.SERPER_API;
+    if (!serperApiKey) {
+        throw new Error("SERPER_API key is not set in environment variables.");
+    }
     const url = 'https://google.serper.dev/images';
     const data = JSON.stringify({
         "q": message
@@ -108,7 +118,7 @@ export async function getImages(message: string): Promise<{ title: string; link:
     const requestOptions: RequestInit = {
         method: 'POST',
         headers: {
-            'X-API-KEY': process.env.SERPER_API as string,
+            'X-API-KEY': serperApiKey,
             'Content-Type': 'application/json'
         },
         body: data
@@ -116,7 +126,8 @@ export async function getImages(message: string): Promise<{ title: string; link:
     try {
         const response = await fetch(url, requestOptions);
         if (!response.ok) {
-            throw new Error(`Network response was not ok. Status: ${response.status}`);
+            const body = await response.text().catch(() => null);
+            throw new Error(`Serper images API returned ${response.status}: ${body || 'no response body'}`);
         }
         const responseData = await response.json();
         const validLinks = await Promise.all(
@@ -150,6 +161,10 @@ export async function getImages(message: string): Promise<{ title: string; link:
 }
 
 export async function getVideos(message: string): Promise<{ imageUrl: string, link: string }[] | null> {
+    const serperApiKey = process.env.SERPER_API;
+    if (!serperApiKey) {
+        throw new Error("SERPER_API key is not set in environment variables.");
+    }
     const url = 'https://google.serper.dev/videos';
     const data = JSON.stringify({
         "q": message
@@ -157,7 +172,7 @@ export async function getVideos(message: string): Promise<{ imageUrl: string, li
     const requestOptions: RequestInit = {
         method: 'POST',
         headers: {
-            'X-API-KEY': process.env.SERPER_API as string,
+            'X-API-KEY': serperApiKey,
             'Content-Type': 'application/json'
         },
         body: data
@@ -165,7 +180,8 @@ export async function getVideos(message: string): Promise<{ imageUrl: string, li
     try {
         const response = await fetch(url, requestOptions);
         if (!response.ok) {
-            throw new Error(`Network response was not ok. Status: ${response.status}`);
+            const body = await response.text().catch(() => null);
+            throw new Error(`Serper videos API returned ${response.status}: ${body || 'no response body'}`);
         }
         const responseData = await response.json();
         const validLinks = await Promise.all(

@@ -1,0 +1,119 @@
+Metadata-Version: 2.4
+Name: rsc
+Version: 0.3.2
+Summary: The simplest calculator library in Python with variable support
+Author-email: Rasa8877 <letperhut@gmail.com>
+License: MIT License
+        
+        Copyright (c) 2025 Rasa Dariush
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+Project-URL: Homepage, https://github.com/Rasa8877/rs-calculator-rsc
+Keywords: calculator,math,expression,variables,safe-eval
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: asteval
+Dynamic: license-file
+
+# 📐 RSC (Really Simple Calculator)
+
+RSC is the simplest calculator library in Python!  
+It lets you evaluate complex math expressions **safely**, with support for variables and all basic math operators.
+
+Version: **0.3.2** – *Improved API with setv() and calc()*
+
+---
+
+## 🔧 Installation
+
+```bash
+pip install rsc
+````
+
+or
+
+```bash
+pip install rsc==0.3.2
+```
+
+---
+
+## 🚀 Quick Start
+
+```python
+import rsc
+
+print(rsc.calc("2 + 3 * (4 - 1)"))  # ➜ 11
+print(rsc.calc("5 ^ 2 + 10"))       # ➜ 35
+```
+
+You can also assign variables:
+
+```python
+rsc.setv("a", 10)
+rsc.setv("b", 20)
+rsc.setv("c", 10)
+
+print(rsc.calc("a + b - c"))     # ➜ 20
+print(rsc.calc("(a + b) - c"))   # ➜ 20
+```
+
+---
+
+## ✅ Supported Features
+
+* Operators: `+`, `-`, `*`, `x`, `/`, `//`, `%`, `**`, `^`
+* Parentheses for grouping
+* Variables using `setv(name, value)`
+* Safe evaluation (using `asteval`)
+* Simple API
+
+---
+
+## 📘 Usage Reference
+
+```python
+rsc.calc(expression: str) -> float | str
+```
+
+```python
+rsc.setv(name: str, value: float | int)
+```
+
+```python
+rsc.show_help()  # Prints usage instructions
+```
+
+---
+
+## 🌐 Links
+
+* [GitHub Repo](https://github.com/Rasa8877/rs-calculator-rsc)
+* Contact: [letperhut@gmail.com](mailto:letperhut@gmail.com)
+
+---
+
+## 🧠 Author
+
+Made with ❤️ by Rasa8877
+RSC — the simplest calculator library in Python!
