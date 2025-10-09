@@ -1,18 +1,28 @@
 "use server";
 import { SearchResult } from '@/components/answer/SearchResultsComponent';
 import { config } from '../config';
+import { decomposeQuery } from './contentProcessing';
 
-export async function getSearchResults(userMessage: string): Promise<any> {
+export async function getSearchResults(userMessage: string): Promise<SearchResult[][]> {
+    // Decompose query for complex questions
+    const queries = await decomposeQuery(userMessage);
+    // Run searches in parallel for each decomposed query
+    let results: SearchResult[][] = [];
     switch (config.searchProvider) {
         case "brave":
-            return braveSearch(userMessage);
+            results = await Promise.all(queries.map(q => braveSearch(q)));
+            break;
         case "serper":
-            return serperSearch(userMessage);
+            results = await Promise.all(queries.map(q => serperSearch(q)));
+            break;
         case "google":
-            return googleSearch(userMessage);
+            results = await Promise.all(queries.map(q => googleSearch(q)));
+            break;
         default:
-            return Promise.reject(new Error(`Unsupported search provider: ${config.searchProvider}`));
+            throw new Error(`Unsupported search provider: ${config.searchProvider}`);
     }
+    // Return decomposed results directly for UI to handle
+    return results;
 }
 
 export async function braveSearch(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {

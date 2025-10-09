@@ -1,21 +1,58 @@
 
 import { config } from '../config';
 import cheerio from 'cheerio';
+import { JSDOM } from 'jsdom';
+import { Readability } from '@mozilla/readability';
+// Use Mozilla Readability to extract main content from HTML
+function extractReadableContent(html: string): string {
+    try {
+        const dom = new JSDOM(html);
+        const reader = new Readability(dom.window.document);
+        const article = reader.parse();
+        return article?.textContent || '';
+    } catch (e) {
+        return '';
+    }
+}
+
+// Query decomposition: generate multiple search queries for complex questions
+export async function decomposeQuery(userQuery: string): Promise<string[]> {
+    // Use your LLM or a prompt to generate decomposed queries
+    // Example prompt:
+    // "Your role is to generate a few short and specific search queries to answer the QUERY below. List 3 options, 1 per line. QUERY: ..."
+    // For now, return a simple split for demonstration
+    // Replace with LLM call for production
+    return userQuery.split(/[.,;\n]/).map(q => q.trim()).filter(q => q.length > 0);
+}
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import { Document as DocumentInterface } from 'langchain/document';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
+
+function getEmbeddingsProvider(provider: 'ollama' | 'openai' = 'ollama') {
+    if (provider === 'ollama') {
+        return new OllamaEmbeddings({
+            model: config.embeddingsModel,
+            baseUrl: config.ollamaBaseURL.replace('/v1','')
+        });
+    } else {
+        return new OpenAIEmbeddings({
+            modelName: config.embeddingsModel
+        });
+    }
+}
+
 let embeddings: OllamaEmbeddings | OpenAIEmbeddings;
-if (config.useOllamaEmbeddings) {
-    embeddings = new OllamaEmbeddings({
-        model: config.embeddingsModel,
-        baseUrl: "http://localhost:11434"
-    });
-} else {
-    embeddings = new OpenAIEmbeddings({
-        modelName: config.embeddingsModel
-    });
+try {
+    if (config.useOllamaEmbeddings) {
+        embeddings = getEmbeddingsProvider('ollama');
+    } else {
+        embeddings = getEmbeddingsProvider('openai');
+    }
+} catch (err) {
+    // fallback to OpenAI if Ollama fails
+    embeddings = getEmbeddingsProvider('openai');
 }
 
 interface SearchResult {
@@ -45,6 +82,10 @@ export async function get10BlueLinksContents(sources: SearchResult[]): Promise<C
         }
     }
     function extractMainContent(html: string): string {
+        // Use Readability for better extraction
+        const readable = extractReadableContent(html);
+        if (readable && readable.length > 100) return readable;
+        // fallback to cheerio
         try {
             const $ = cheerio.load(html);
             $("script, style, head, nav, footer, iframe, img").remove();

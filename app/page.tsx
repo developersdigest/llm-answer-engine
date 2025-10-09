@@ -6,7 +6,7 @@ import { type AI } from './action';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
 import Textarea from 'react-textarea-autosize';
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
-import { Tooltip, TooltipContent, TooltipTrigger, } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import dynamic from 'next/dynamic';
 // Main components 
@@ -34,6 +34,7 @@ interface SearchResult {
   favicon: string;
   link: string;
   title: string;
+  readabilityContent?: string;
 }
 interface Message {
   falBase64Image: any;
@@ -336,7 +337,38 @@ export default function Page() {
                     {message.spotify && message.spotify.length > 0 && (
                       <Spotify key={`financialChart-${index}`} spotify={message.spotify} />
                     )}
-                    {message.searchResults && (<SearchResultsComponent key={`searchResults-${index}`} searchResults={message.searchResults} />)}
+                    {/* Enhanced: Show decomposed queries and Readability content */}
+                    {message.searchResults && Array.isArray(message.searchResults) && message.searchResults.length > 0 && (
+                      Array.isArray(message.searchResults[0]) ? (
+                        <div className="mb-4">
+                          <h3 className="font-bold text-lg mb-2">Decomposed Queries</h3>
+                          {(message.searchResults as any[]).map((subResults, subIdx) => Array.isArray(subResults) ? (
+                            <div key={`decomposed-query-${index}-${subIdx}`} className="mb-2 p-2 border rounded bg-gray-50 dark:bg-slate-900">
+                              <div className="font-semibold text-md mb-1">Sub-query {subIdx + 1}</div>
+                              <SearchResultsComponent searchResults={subResults} />
+                              {/* Show Readability content if present in any result */}
+                              {subResults.map((result, rIdx) => result.readabilityContent && (
+                                <ExpandableReadabilityContent
+                                  key={`readability-${index}-${subIdx}-${rIdx}`}
+                                  content={result.readabilityContent}
+                                />
+                              ))}
+                            </div>
+                          ) : null)}
+                        </div>
+                      ) : (
+                        <>
+                          <SearchResultsComponent key={`searchResults-${index}`} searchResults={message.searchResults as SearchResult[]} />
+                          {/* Show Readability content if present in any result */}
+                          {(message.searchResults as SearchResult[]).map((result, rIdx) => result.readabilityContent && (
+                            <ExpandableReadabilityContent
+                              key={`readability-${index}-${rIdx}`}
+                              content={result.readabilityContent}
+                            />
+                          ))}
+                        </>
+                      )
+                    )}
                     {message.places && message.places.length > 0 && (
                       <MapComponent key={`map-${index}`} places={message.places} />
                     )}
@@ -512,4 +544,34 @@ export default function Page() {
       <div className="pb-[80px] pt-4 md:pt-10"></div>
     </div>
   );
-};
+}
+// End of Page component
+
+// --- ExpandableReadabilityContent: UI component for expand/collapse and tooltip ---
+function ExpandableReadabilityContent({ content }: { content: string }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="mt-2 p-2 border-l-4 border-blue-400 bg-blue-50 dark:bg-blue-900">
+      <div className="flex items-center font-semibold text-blue-700 dark:text-blue-200">
+        <span>Main Content Extracted</span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="ml-2 cursor-pointer text-blue-400" title="What is this?">ⓘ</span>
+          </TooltipTrigger>
+          <TooltipContent>
+            This is the main readable content extracted from the page using Mozilla Readability.
+          </TooltipContent>
+        </Tooltip>
+        <button
+          className="ml-4 px-2 py-1 text-xs bg-blue-200 dark:bg-blue-800 rounded"
+          onClick={() => setExpanded((prev) => !prev)}
+        >
+          {expanded ? 'Collapse' : 'Expand'}
+        </button>
+      </div>
+      {expanded && (
+        <div className="text-sm whitespace-pre-line mt-2">{content}</div>
+      )}
+    </div>
+  );
+}

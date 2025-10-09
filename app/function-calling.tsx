@@ -3,10 +3,26 @@ import { OpenAI } from 'openai';
 import { config } from './config';
 import { SpotifyApi } from "@spotify/web-api-ts-sdk";
 
-const client = new OpenAI({
-    baseURL: config.nonOllamaBaseURL,
-    apiKey: config.inferenceAPIKey
-});
+
+function getOpenAIClient(provider: 'ollama' | 'openai' | 'groq' = 'ollama') {
+    if (provider === 'ollama') {
+        return new OpenAI({
+            baseURL: config.ollamaBaseURL,
+            apiKey: config.ollamaAPIKey
+        });
+    } else if (provider === 'openai') {
+        return new OpenAI({
+            baseURL: config.openaiBaseURL,
+            apiKey: config.openaiAPIKey
+        });
+    } else {
+        return new OpenAI({
+            baseURL: config.groqBaseURL,
+            apiKey: config.groqAPIKey
+        });
+    }
+}
+
 const MODEL = config.inferenceModel;
 
 const api = SpotifyApi.withClientCredentials(
@@ -165,13 +181,27 @@ export async function functionCalling(query: string) {
                 },
             },
         ];
-        const response = await client.chat.completions.create({
-            model: MODEL,
-            messages: messages,
-            tools: tools,
-            tool_choice: "auto",
-            max_tokens: 4096,
-        });
+        let client = getOpenAIClient('ollama');
+        let response;
+        try {
+            response = await client.chat.completions.create({
+                model: MODEL,
+                messages: [
+                    { role: 'user', content: query }
+                ],
+                stream: false
+            });
+        } catch (err) {
+            // Fallback to OpenAI if Ollama fails
+            client = getOpenAIClient('openai');
+            response = await client.chat.completions.create({
+                model: 'gpt-3.5-turbo',
+                messages: [
+                    { role: 'user', content: query }
+                ],
+                stream: false
+            });
+        }
         const responseMessage = response.choices[0].message;
         const toolCalls = responseMessage.tool_calls;
         if (toolCalls) {

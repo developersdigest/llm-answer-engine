@@ -2,17 +2,24 @@
 import { config } from '../config';
 import { OpenAI } from 'openai';
 
-let openai: OpenAI;
-if (config.useOllamaInference) {
-    openai = new OpenAI({
-        baseURL: 'http://localhost:11434/v1',
-        apiKey: 'ollama'
-    });
-} else {
-    openai = new OpenAI({
-        baseURL: config.nonOllamaBaseURL,
-        apiKey: config.inferenceAPIKey
-    });
+
+function getOpenAIClient(provider: 'ollama' | 'openai' | 'groq' = 'openai') {
+    if (provider === 'ollama') {
+        return new OpenAI({
+            baseURL: config.ollamaBaseURL,
+            apiKey: config.ollamaAPIKey
+        });
+    } else if (provider === 'openai') {
+        return new OpenAI({
+            baseURL: config.openaiBaseURL,
+            apiKey: config.openaiAPIKey
+        });
+    } else {
+        return new OpenAI({
+            baseURL: config.groqBaseURL,
+            apiKey: config.groqAPIKey
+        });
+    }
 }
 
 interface SearchResult {
@@ -22,7 +29,9 @@ interface SearchResult {
 }
 
 export const relevantQuestions = async (sources: SearchResult[], userMessage: String): Promise<any> => {
-    return await openai.chat.completions.create({
+    // Always use OpenAI for follow-up questions, since Ollama does not support this
+    const client = getOpenAIClient('openai');
+    return await client.chat.completions.create({
         messages: [
             {
                 role: "system",
@@ -44,7 +53,7 @@ export const relevantQuestions = async (sources: SearchResult[], userMessage: St
                 content: `Generate follow-up questions based on the top results from a similarity search: ${JSON.stringify(sources)}. The original search query is: "${userMessage}".`,
             },
         ],
-        model: config.inferenceModel,
+        model: 'gpt-3.5-turbo',
         response_format: { type: "json_object" },
     });
 };
