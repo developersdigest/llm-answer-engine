@@ -3,15 +3,21 @@ import { SearchResult } from '@/components/answer/SearchResultsComponent';
 import { config } from '../config';
 
 export async function getSearchResults(userMessage: string): Promise<any> {
-    switch (config.searchProvider) {
-        case "brave":
-            return braveSearch(userMessage);
-        case "serper":
-            return serperSearch(userMessage);
-        case "google":
-            return googleSearch(userMessage);
-        default:
-            return Promise.reject(new Error(`Unsupported search provider: ${config.searchProvider}`));
+    try {
+        switch (config.searchProvider) {
+            case "brave":
+                return await braveSearch(userMessage);
+            case "serper":
+                return await serperSearch(userMessage);
+            case "google":
+                return await googleSearch(userMessage);
+            default:
+                console.error(`Unsupported search provider: ${config.searchProvider}`);
+                return [];
+        }
+    } catch (error) {
+        console.error('Error in getSearchResults:', error);
+        return [];
     }
 }
 
@@ -26,20 +32,22 @@ export async function braveSearch(message: string, numberOfPagesToScan = config.
         });
         if (!response.ok) {
             console.log('Issue with response from Brave Search API');
+            return [];
         }
         const jsonResponse = await response.json();
         if (!jsonResponse.web || !jsonResponse.web.results) {
-            throw new Error('Invalid API response format');
+            console.error('Invalid API response format from Brave Search API');
+            return [];
         }
         const final = jsonResponse.web.results.map((result: any): SearchResult => ({
             title: result.title,
             link: result.url,
-            favicon: result.profile.img
+            favicon: result.profile?.img || ''
         }));
         return final;
     } catch (error) {
         console.error('Error fetching search results:', error);
-        throw error;
+        return [];
     }
 }
 
@@ -48,11 +56,13 @@ export async function googleSearch(message: string, numberOfPagesToScan = config
         const url = `https://www.googleapis.com/customsearch/v1?key=${process.env.GOOGLE_SEARCH_API_KEY}&cx=${process.env.GOOGLE_CX}&q=${encodeURIComponent(message)}&num=${numberOfPagesToScan}`;
         const response = await fetch(url);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            console.error(`HTTP error! status: ${response.status}`);
+            return [];
         }
         const jsonResponse = await response.json();
         if (!jsonResponse.items) {
-            throw new Error('Invalid API response format');
+            console.error('Invalid API response format from Google Search API');
+            return [];
         }
         const final = jsonResponse.items.map((result: any): SearchResult => ({
             title: result.title,
@@ -62,7 +72,7 @@ export async function googleSearch(message: string, numberOfPagesToScan = config
         return final;
     } catch (error) {
         console.error('Error fetching search results:', error);
-        throw error;
+        return [];
     }
 }
 
@@ -82,11 +92,13 @@ export async function serperSearch(message: string, numberOfPagesToScan = config
     try {
         const response = await fetch(url, requestOptions);
         if (!response.ok) {
-            throw new Error(`Network response was not ok. Status: ${response.status}`);
+            console.error(`Network response was not ok. Status: ${response.status}`);
+            return [];
         }
         const responseData = await response.json();
         if (!responseData.organic) {
-            throw new Error('Invalid API response format');
+            console.error('Invalid API response format from Serper API');
+            return [];
         }
         const final = responseData.organic.map((result: any): SearchResult => ({
             title: result.title,
@@ -96,29 +108,34 @@ export async function serperSearch(message: string, numberOfPagesToScan = config
         return final
     } catch (error) {
         console.error('Error fetching search results:', error);
-        throw error;
+        return [];
     }
 }
 
 export async function getImages(message: string): Promise<{ title: string; link: string }[]> {
-    const url = 'https://google.serper.dev/images';
-    const data = JSON.stringify({
-        "q": message
-    });
-    const requestOptions: RequestInit = {
-        method: 'POST',
-        headers: {
-            'X-API-KEY': process.env.SERPER_API as string,
-            'Content-Type': 'application/json'
-        },
-        body: data
-    };
     try {
+        const url = 'https://google.serper.dev/images';
+        const data = JSON.stringify({
+            "q": message
+        });
+        const requestOptions: RequestInit = {
+            method: 'POST',
+            headers: {
+                'X-API-KEY': process.env.SERPER_API as string,
+                'Content-Type': 'application/json'
+            },
+            body: data
+        };
         const response = await fetch(url, requestOptions);
         if (!response.ok) {
-            throw new Error(`Network response was not ok. Status: ${response.status}`);
+            console.error(`Network response was not ok. Status: ${response.status}`);
+            return [];
         }
         const responseData = await response.json();
+        if (!responseData.images) {
+            console.error('Invalid API response format from Serper Images API');
+            return [];
+        }
         const validLinks = await Promise.all(
             responseData.images.map(async (image: any) => {
                 const link = image.imageUrl;
@@ -145,29 +162,34 @@ export async function getImages(message: string): Promise<{ title: string; link:
         return filteredLinks.slice(0, 9);
     } catch (error) {
         console.error('Error fetching images:', error);
-        throw error;
+        return [];
     }
 }
 
 export async function getVideos(message: string): Promise<{ imageUrl: string, link: string }[] | null> {
-    const url = 'https://google.serper.dev/videos';
-    const data = JSON.stringify({
-        "q": message
-    });
-    const requestOptions: RequestInit = {
-        method: 'POST',
-        headers: {
-            'X-API-KEY': process.env.SERPER_API as string,
-            'Content-Type': 'application/json'
-        },
-        body: data
-    };
     try {
+        const url = 'https://google.serper.dev/videos';
+        const data = JSON.stringify({
+            "q": message
+        });
+        const requestOptions: RequestInit = {
+            method: 'POST',
+            headers: {
+                'X-API-KEY': process.env.SERPER_API as string,
+                'Content-Type': 'application/json'
+            },
+            body: data
+        };
         const response = await fetch(url, requestOptions);
         if (!response.ok) {
-            throw new Error(`Network response was not ok. Status: ${response.status}`);
+            console.error(`Network response was not ok. Status: ${response.status}`);
+            return [];
         }
         const responseData = await response.json();
+        if (!responseData.videos) {
+            console.error('Invalid API response format from Serper Videos API');
+            return [];
+        }
         const validLinks = await Promise.all(
             responseData.videos.map(async (video: any) => {
                 const imageUrl = video.imageUrl;
@@ -191,6 +213,7 @@ export async function getVideos(message: string): Promise<{ imageUrl: string, li
         return filteredLinks.slice(0, 9);
     } catch (error) {
         console.error('Error fetching videos:', error);
-        throw error;
+        return [];
     }
 }
+
