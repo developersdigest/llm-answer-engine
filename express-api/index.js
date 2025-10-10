@@ -1,155 +1,208 @@
+// --------------------------------------
 // 1. Import necessary modules
-import express from 'express';
-import bodyParser from 'body-parser';
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { OpenAIEmbeddings } from '@langchain/openai';
-import { MemoryVectorStore } from 'langchain/vectorstores/memory';
-import { BraveSearch }  from "@langchain/community/tools/brave_search";
-import OpenAI from 'openai';
-import cheerio from 'cheerio';
-import dotenv from 'dotenv';
+// --------------------------------------
+import express from "express";
+import bodyParser from "body-parser";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { BraveSearch } from "@langchain/community/tools/brave_search";
+import OpenAI from "openai";
+import cheerio from "cheerio";
+import dotenv from "dotenv";
+
 dotenv.config();
+
+// --------------------------------------
 // 2. Initialize Express
+// --------------------------------------
 const app = express();
 const port = 3005;
-// 3. Middleware
 app.use(bodyParser.json());
-// 4. Initialize Groq and embeddings
-let openai = new OpenAI({
-  baseURL: 'https://api.groq.com/openai/v1',
+
+// --------------------------------------
+// 3. Initialize OpenAI + Embeddings
+// --------------------------------------
+const openai = new OpenAI({
+  baseURL: "https://api.groq.com/openai/v1",
   apiKey: process.env.GROQ_API_KEY,
 });
+
 const embeddings = new OpenAIEmbeddings();
-// 5. Define the route for POST requests
-app.post('/', async (req, res) => {
-  // 6. Handle POST requests
-  console.log(`1. Received POST request`);
-  // 7. Extract request data
-  const { message, returnSources = true, returnFollowUpQuestions = true, embedSourcesInLLMResponse = false, textChunkSize = 800, textChunkOverlap = 200, numberOfSimilarityResults = 2, numberOfPagesToScan = 4 } = req.body;
-  console.log(`2. Destructured request data`);
-  // 8. Define rephrase function
-  async function rephraseInput(inputString) {
-    console.log(`4. Rephrasing input`);
-    // 9. Rephrase input using Groq
+
+// --------------------------------------
+// 4. Helper: Rephrase user input
+// --------------------------------------
+async function rephraseInput(input) {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "mixtral-8x7b-32768",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a rephraser. Always reply with a concise version of the input, optimized for a search engine query.",
+        },
+        { role: "user", content: input },
+      ],
+    });
+    return response.choices[0].message.content;
+  } catch (err) {
+    console.error("Error rephrasing input:", err);
+    return input;
+  }
+}
+
+// --------------------------------------
+// 5. Helper: Extract main text from a web page
+// --------------------------------------
+function extractMainContent(html, link) {
+  const $ = cheerio.load(html);
+  $("script, style, head, nav, footer, iframe, img").remove();
+  return $("body").text().replace(/\s+/g, " ").trim();
+}
+
+// --------------------------------------
+// 6. Helper: Generate Follow-Up Questions
+// --------------------------------------
+async function generateFollowUpQuestions(answer) {
+  try {
     const groqResponse = await openai.chat.completions.create({
       model: "mixtral-8x7b-32768",
       messages: [
-        { role: "system", content: "You are a rephraser and always respond with a rephrased version of the input that is given to a search engine API. Always be succint and use the same words as the input. ONLY RETURN THE REPHRASED VERSION OF THE INPUT." },
-        { role: "user", content: inputString },
+        {
+          role: "system",
+          content:
+            "Generate 3 relevant follow-up questions based on the provided text. Return them as a JSON array.",
+        },
+        {
+          role: "user",
+          content: `Generate 3 follow-up questions for: ${answer}`,
+        },
       ],
     });
-    console.log(`5. Rephrased input and got answer from Groq`);
-    return groqResponse.choices[0].message.content;
+
+    return JSON.parse(groqResponse.choices[0].message.content);
+  } catch (err) {
+    console.error("Error generating follow-up questions:", err);
+    return ["Can you explain more?", "Why is that important?", "Tell me more about this topic."];
   }
-  // 10. Define search engine function
-  async function searchEngineForSources(message) {
-    console.log(`3. Initializing Search Engine Process`);
-    // 11. Initialize BraveSearch
-    const loader = new BraveSearch({ apiKey: process.env.BRAVE_SEARCH_API_KEY });
-    // 12. Rephrase the message
+}
+
+// --------------------------------------
+// 7. Helper: Custom Domain Knowledge
+// --------------------------------------
+function getCustomKnowledge(message) {
+  const text = message.toLowerCase();
+
+  const facts = {
+    "pm of india": "🇮🇳 The current Prime Minister of India is **Narendra Modi**, serving since May 2014.",
+    dog: "🐶 Dogs are loyal domestic animals known as human’s best friends.",
+    cat: "🐱 Cats are independent and curious animals, loved for their agility and affection.",
+    tiger: "🐯 Tigers are the largest wild cats and apex predators found mostly in Asia.",
+    space: "🚀 Space is a vast expanse beyond Earth’s atmosphere, filled with stars, galaxies, and planets.",
+    ocean: "🌊 Oceans cover over 70% of Earth’s surface and are home to millions of species.",
+  };
+
+  for (const key in facts) {
+    if (text.includes(key)) return facts[key];
+  }
+
+  return null;
+}
+
+// --------------------------------------
+// 8. Main POST Route
+// --------------------------------------
+app.post("/", async (req, res) => {
+  const startTime = Date.now();
+  const {
+    message,
+    textChunkSize = 800,
+    textChunkOverlap = 200,
+    numberOfSimilarityResults = 2,
+    numberOfPagesToScan = 4,
+  } = req.body;
+
+  console.log("\n📩 New query:", message);
+
+  try {
+    // Check for quick domain knowledge
+    const predefined = getCustomKnowledge(message);
+    if (predefined) {
+      return res.json({
+        answer: predefined,
+        sources: [],
+        followUpQuestions: await generateFollowUpQuestions(predefined),
+      });
+    }
+
+    // Rephrase query
     const rephrasedMessage = await rephraseInput(message);
-    console.log(`6. Rephrased message and got documents from BraveSearch`);
-    // 13. Get documents from BraveSearch 
+    console.log("🔁 Rephrased:", rephrasedMessage);
+
+    // Initialize Brave Search
+    const loader = new BraveSearch({ apiKey: process.env.BRAVE_SEARCH_API_KEY });
     const docs = await loader.call(rephrasedMessage, { count: numberOfPagesToScan });
-    // 14. Normalize data
-    const normalizedData = normalizeData(docs);
-    // 15. Process and vectorize the content
-    return await Promise.all(normalizedData.map(fetchAndProcess));
-  }
-  // 16. Normalize data
-  function normalizeData(docs) {
-    return JSON.parse(docs)
-      .filter((doc) => doc.title && doc.link && !doc.link.includes("brave.com"))
-      .slice(0, numberOfPagesToScan)
-      .map(({ title, link }) => ({ title, link }));
-  }
-  // 17. Fetch page content
-  const fetchPageContent = async (link) => {
-    console.log(`7. Fetching page content for ${link}`);
-    try {
-      const response = await fetch(link);
-      if (!response.ok) {
-        return ""; // skip if fetch fails
-      }
-      const text = await response.text();
-      return extractMainContent(text, link);
-    } catch (error) {
-      console.error(`Error fetching page content for ${link}:`, error);
-      return '';
-    }
-  };
-  // 18. Extract main content from the HTML page
-  function extractMainContent(html, link) {
-    console.log(`8. Extracting main content from HTML for ${link}`);
-    const $ = html.length ? cheerio.load(html) : null
-    $("script, style, head, nav, footer, iframe, img").remove();
-    return $("body").text().replace(/\s+/g, " ").trim();
-  }
-  // 19. Process and vectorize the content
-  let vectorCount = 0;
-  const fetchAndProcess = async (item) => {
-    const htmlContent = await fetchPageContent(item.link);
-    if (htmlContent && htmlContent.length < 250) return null;
-    const splitText = await new RecursiveCharacterTextSplitter({ chunkSize: textChunkSize, chunkOverlap: textChunkOverlap }).splitText(htmlContent);
-    const vectorStore = await MemoryVectorStore.fromTexts(splitText, { link: item.link, title: item.title }, embeddings);
-    vectorCount++;
-    console.log(`9. Processed ${vectorCount} sources for ${item.link}`);
-    return await vectorStore.similaritySearch(message, numberOfSimilarityResults);
-  };
-  // 20. Fetch and process sources
-  const sources = await searchEngineForSources(message, textChunkSize, textChunkOverlap);
-  const sourcesParsed = sources.map(group =>
-    group.map(doc => {
-      const title = doc.metadata.title;
-      const link = doc.metadata.link;
-      return { title, link };
-    })
-      .filter((doc, index, self) => self.findIndex(d => d.link === doc.link) === index)
-  );
-  console.log(`10. RAG complete sources and preparing response content`);
-  // 21. Prepare the response content
-  const chatCompletion = await openai.chat.completions.create({
-    messages:
-      [{
-        role: "system", content: `
-        - Here is my query "${message}", respond back with an answer that is as long as possible. If you can't find any relevant results, respond with "No relevant results found." 
-        - ${embedSourcesInLLMResponse ? "Return the sources used in the response with iterable numbered markdown style annotations." : ""}" : ""}`
-      },
-      { role: "user", content: ` - Here are the top results from a similarity search: ${JSON.stringify(sources)}. ` },
-      ], stream: true, model: "mixtral-8x7b-32768"
-  });
-  console.log(`11. Sent content to Groq for chat completion.`);
-  let responseTotal = "";
-  console.log(`12. Streaming response from Groq... \n`);
-  for await (const chunk of chatCompletion) {
-    if (chunk.choices[0].delta && chunk.choices[0].finish_reason !== "stop") {
-      process.stdout.write(chunk.choices[0].delta.content);
-      responseTotal += chunk.choices[0].delta.content;
-    } else {
-      let responseObj = {};
-      returnSources ? responseObj.sources = sourcesParsed : null;
-      responseObj.answer = responseTotal;
-      returnFollowUpQuestions ? responseObj.followUpQuestions = await generateFollowUpQuestions(responseTotal) : null;
-      console.log(`\n\n13. Generated follow-up questions:  ${JSON.stringify(responseObj.followUpQuestions)}`);
-      res.status(200).json(responseObj);
-    }
+    const normalized = JSON.parse(docs)
+      .filter((d) => d.title && d.link)
+      .slice(0, numberOfPagesToScan);
+
+    console.log(`🔍 Found ${normalized.length} relevant web pages.`);
+
+    // Fetch, chunk, and vectorize
+    const sources = await Promise.all(
+      normalized.map(async ({ title, link }) => {
+        try {
+          const response = await fetch(link);
+          const html = await response.text();
+          const content = extractMainContent(html, link);
+          const splitter = new RecursiveCharacterTextSplitter({
+            chunkSize: textChunkSize,
+            chunkOverlap: textChunkOverlap,
+          });
+          const chunks = await splitter.splitText(content);
+          const store = await MemoryVectorStore.fromTexts(chunks, { link, title }, embeddings);
+          return await store.similaritySearch(message, numberOfSimilarityResults);
+        } catch (err) {
+          console.error("Error processing link:", link, err);
+          return [];
+        }
+      })
+    );
+
+    // Prepare LLM summary
+    const chat = await openai.chat.completions.create({
+      model: "mixtral-8x7b-32768",
+      messages: [
+        {
+          role: "system",
+          content: `You are an intelligent assistant. Respond with an informative and structured summary for the query: "${message}" using context below.`,
+        },
+        { role: "user", content: `Sources: ${JSON.stringify(sources)}` },
+      ],
+    });
+
+    const finalAnswer = chat.choices[0].message.content;
+
+    // Return response
+    res.json({
+      answer: finalAnswer,
+      sources,
+      followUpQuestions: await generateFollowUpQuestions(finalAnswer),
+      responseTime: `${(Date.now() - startTime) / 1000}s`,
+    });
+
+    console.log("✅ Response sent in", (Date.now() - startTime) / 1000, "seconds");
+  } catch (error) {
+    console.error("❌ Error in processing:", error);
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
   }
 });
-// 22. Generate follow-up questions
-async function generateFollowUpQuestions(responseText) {
-  const groqResponse = await openai.chat.completions.create({
-    model: "mixtral-8x7b-32768",
-    messages: [
-      { role: "system", content: "You are a question generator. Generate 3 follow-up questions based on the provided text. Return the questions in an array format." },
-      {
-        role: "user",
-        content: `Generate 3 follow-up questions based on the following text:\n\n${responseText}\n\nReturn the questions in the following format: ["Question 1", "Question 2", "Question 3"]`
-      }
-    ],
-  });
-  return JSON.parse(groqResponse.choices[0].message.content);
-}
-// 23. Notify when the server starts listening
+
+// --------------------------------------
+// 9. Start Server
+// --------------------------------------
 app.listen(port, () => {
-  console.log(`Server is listening on port ${port}`);
-})
+  console.log(`🚀 Server is running on http://localhost:${port}`);
+});
