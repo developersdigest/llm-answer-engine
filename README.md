@@ -221,3 +221,15 @@ I'm the developer behind Developers Digest. If you find my work helpful or enjoy
 - **Website**: Check out my website at [developersdigest.tech](https://developersdigest.tech)
 - **Github**: Follow me on GitHub at [github.com/developersdigest](https://github.com/developersdigest)
 - **Twitter**: Follow me on Twitter at [twitter.com/dev__digest](https://twitter.com/dev__digest)
+
+## Troubleshooting
+
+### GitHub Codespaces: "x-forwarded-host" does not match "origin"
+
+If you run this in GitHub Codespaces you may see:
+
+- `x-forwarded-host header ... does not match origin header ...`
+- `Error: Invalid Server Actions request.`
+
+This is caused by Next.js Server Actions CSRF protection when the app is behind a proxy.
+This repo includes a `next.config.mjs` that allows Codespaces forwarded hosts.
