@@ -67,7 +67,7 @@
     "tailwindcss-animate": "^1.0.7",
     "turndown": "^7.2.0",
     "usehooks-ts": "^2.15.1",
-    "zod": "3.22.4",
+    "zod": "^3.25.0",
     "zod-to-json-schema": "3.22.4"
   },
   "devDependencies": {
@@ -88,5 +88,8 @@
     "@langchain/community": {
       "portkey-ai": "1.3.0"
     }
+  },
+  "engines": {
+    "node": ">=18.17.0"
   }
 }

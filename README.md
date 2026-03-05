@@ -221,3 +221,21 @@ I'm the developer behind Developers Digest. If you find my work helpful or enjoy
 - **Website**: Check out my website at [developersdigest.tech](https://developersdigest.tech)
 - **Github**: Follow me on GitHub at [github.com/developersdigest](https://github.com/developersdigest)
 - **Twitter**: Follow me on Twitter at [twitter.com/dev__digest](https://twitter.com/dev__digest)
+
+
+## Troubleshooting
+
+### Node.js version
+
+This project uses Next.js 14.1.x which requires **Node.js >= 18.17.0**.
+
+If you see `npm ERR! code EBADENGINE` / `Unsupported engine`, upgrade Node (e.g. via nvm):
+
+```bash
+nvm install 18.17.0
+nvm use 18.17.0
+```
+
+### npm install / npm ci dependency resolution
+
+If `npm install`/`npm ci` fails with a peer dependency conflict around `zod`, ensure you are using an up-to-date Node/npm and the repo dependencies (this repo pins `zod` to a compatible version).
