@@ -19,7 +19,7 @@
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
     --accent: 240 4.8% 95.9%;
-    --accent-foreground: ;
+    --accent-foreground: 240 5.9% 10%; /* 🛠️ FIXED missing value */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --ring: 240 5% 64.9%;
@@ -42,14 +42,12 @@
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
     --accent: 240 3.7% 15.9%;
-    --accent-foreground: ;
+    --accent-foreground: 0 0% 98%; /* 🛠️ FIXED missing value */
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 85.7% 97.3%;
     --ring: 240 3.7% 15.9%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -87,7 +85,6 @@
 }
 
 /* Markdown styles */
-/* Markdown styles */
 .markdown-container {
   font-family: Arial, sans-serif;
   line-height: 1.6;
@@ -108,29 +105,12 @@
   padding-bottom: 0.3em;
 }
 
-.markdown-container h1 {
-  font-size: 1.5em;
-}
-
-.markdown-container h2 {
-  font-size: 1.4em;
-}
-
-.markdown-container h3 {
-  font-size: 1.3em;
-}
-
-.markdown-container h4 {
-  font-size: 1.2em;
-}
-
-.markdown-container h5 {
-  font-size: 1.1em;
-}
-
-.markdown-container h6 {
-  font-size: 1em;
-}
+.markdown-container h1 { font-size: 1.5em; }
+.markdown-container h2 { font-size: 1.4em; }
+.markdown-container h3 { font-size: 1.3em; }
+.markdown-container h4 { font-size: 1.2em; }
+.markdown-container h5 { font-size: 1.1em; }
+.markdown-container h6 { font-size: 1em; }
 
 .markdown-container p {
   margin-bottom: 1em;
