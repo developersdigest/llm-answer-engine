@@ -5,6 +5,7 @@ import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import { BraveSearch }  from "@langchain/community/tools/brave_search";
+import { tavily } from "@tavily/core";
 import OpenAI from 'openai';
 import cheerio from 'cheerio';
 import dotenv from 'dotenv';
@@ -44,15 +45,28 @@ app.post('/', async (req, res) => {
   // 10. Define search engine function
   async function searchEngineForSources(message) {
     console.log(`3. Initializing Search Engine Process`);
-    // 11. Initialize BraveSearch
-    const loader = new BraveSearch({ apiKey: process.env.BRAVE_SEARCH_API_KEY });
+    const searchProvider = process.env.SEARCH_PROVIDER || 'brave';
     // 12. Rephrase the message
     const rephrasedMessage = await rephraseInput(message);
-    console.log(`6. Rephrased message and got documents from BraveSearch`);
-    // 13. Get documents from BraveSearch 
-    const docs = await loader.call(rephrasedMessage, { count: numberOfPagesToScan });
-    // 14. Normalize data
-    const normalizedData = normalizeData(docs);
+    let normalizedData;
+    if (searchProvider === 'tavily') {
+      // Tavily search path
+      console.log(`6. Rephrased message, searching with Tavily`);
+      const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
+      const tavilyResponse = await tvly.search(rephrasedMessage, { maxResults: numberOfPagesToScan });
+      normalizedData = tavilyResponse.results
+        .filter((result) => result.title && result.url)
+        .slice(0, numberOfPagesToScan)
+        .map(({ title, url }) => ({ title, link: url }));
+    } else {
+      // 11. Initialize BraveSearch (default)
+      const loader = new BraveSearch({ apiKey: process.env.BRAVE_SEARCH_API_KEY });
+      console.log(`6. Rephrased message and got documents from BraveSearch`);
+      // 13. Get documents from BraveSearch
+      const docs = await loader.call(rephrasedMessage, { count: numberOfPagesToScan });
+      // 14. Normalize data
+      normalizedData = normalizeData(docs);
+    }
     // 15. Process and vectorize the content
     return await Promise.all(normalizedData.map(fetchAndProcess));
   }
