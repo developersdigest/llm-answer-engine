@@ -1,6 +1,7 @@
 "use server";
 import { SearchResult } from '@/components/answer/SearchResultsComponent';
 import { config } from '../config';
+import { tavily } from '@tavily/core';
 
 export async function getSearchResults(userMessage: string): Promise<any> {
     switch (config.searchProvider) {
@@ -10,6 +11,8 @@ export async function getSearchResults(userMessage: string): Promise<any> {
             return serperSearch(userMessage);
         case "google":
             return googleSearch(userMessage);
+        case "tavily":
+            return tavilySearch(userMessage);
         default:
             return Promise.reject(new Error(`Unsupported search provider: ${config.searchProvider}`));
     }
@@ -94,6 +97,22 @@ export async function serperSearch(message: string, numberOfPagesToScan = config
             favicon: result.favicons?.[0] || ''
         }));
         return final
+    } catch (error) {
+        console.error('Error fetching search results:', error);
+        throw error;
+    }
+}
+
+export async function tavilySearch(message: string, numberOfPagesToScan = config.numberOfPagesToScan): Promise<SearchResult[]> {
+    try {
+        const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY as string });
+        const response = await tvly.search(message, { maxResults: numberOfPagesToScan });
+        const final = response.results.map((result: any): SearchResult => ({
+            title: result.title,
+            link: result.url,
+            favicon: `https://www.google.com/s2/favicons?domain=${new URL(result.url).hostname}&sz=128`
+        }));
+        return final;
     } catch (error) {
         console.error('Error fetching search results:', error);
         throw error;
